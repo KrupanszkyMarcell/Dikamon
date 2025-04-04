@@ -69,6 +69,7 @@
                                CornerRadius="8"
                                Margin="0,5"
                                HeightRequest="50"
+                                Command="{Binding GoToLoginPageCommand}"
                                 />
 
                         <Button Text="Regisztráció" 
@@ -78,6 +79,7 @@
                                CornerRadius="8"
                                Margin="0,10,0,5"
                                HeightRequest="50"
+                                 Command="{Binding GoToRegisterPageCommand}"
                               />
                     </StackLayout>
                 </Frame>
