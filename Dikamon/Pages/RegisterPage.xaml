@@ -64,7 +64,8 @@
                                    HasShadow="False">
                                 <VerticalStackLayout>
                                     <Entry Placeholder="Adja meg a teljes nevét"
-                                       FontFamily="OpenSansRegular"/>
+                                       FontFamily="OpenSansRegular"
+                                       Text="{Binding User.Name}" />
                                 </VerticalStackLayout>
                             </Frame>
                         </StackLayout>
@@ -81,7 +82,8 @@
                                 <VerticalStackLayout>
                                     <Entry Placeholder="pelda@email.com"
                                        FontFamily="OpenSansRegular"
-                                       Keyboard="Email"/>
+                                       Keyboard="Email"
+                                       Text="{Binding User.Email}" />
                                 </VerticalStackLayout>
                             </Frame>
                         </StackLayout>
@@ -100,7 +102,8 @@
                                            Placeholder="Legalább 8 karakter"
                                            FontFamily="OpenSansRegular"
                                            IsPassword="True"
-                                           x:Name="PasswordEntry"/>
+                                           x:Name="PasswordEntry"
+                                           Text="{Binding User.Password}"/>
                                     <ImageButton Grid.Column="1"
                                                 Source="eye_icon.png"
                                                 WidthRequest="24"
@@ -143,7 +146,7 @@
                                 TextColor="Black"
                                 CornerRadius="8"
                                 HeightRequest="50"
-                                />
+                                Command="{Binding RegisterCommand}" />
                     </StackLayout>
                 </Frame>
 
@@ -162,7 +165,9 @@
                            TextColor="#FFEE58"
                            VerticalOptions="Center"
                            Margin="5,0,0,0">
-
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding GoToLoginPageCommand}"/>
+                        </Label.GestureRecognizers>
                     </Label>
                 </StackLayout>
             </Grid>

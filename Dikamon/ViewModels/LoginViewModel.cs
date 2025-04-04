@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dikamon.Api;
 using Dikamon.Models;
+using Dikamon.Pages;
 
 namespace Dikamon.ViewModels
 {
@@ -44,6 +45,11 @@ namespace Dikamon.ViewModels
             {
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
             }
+        }
+        [RelayCommand]
+        async Task GoToRegisterPage()
+        {
+            await Shell.Current.GoToAsync($"{nameof(RegisterPage)}", true);
         }
     }
 }

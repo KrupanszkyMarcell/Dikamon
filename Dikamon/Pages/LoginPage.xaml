@@ -139,12 +139,14 @@
                    FontSize="14"
                    VerticalOptions="Center"/>
                 <Label Text="Regisztráció" 
-                   FontFamily="Tiny5"
-                   FontSize="14"
-                   TextColor="#90CAF9"
-                   VerticalOptions="Center"
-                   Margin="5,0,0,0">
-
+                       FontFamily="Tiny5"
+                       FontSize="14"
+                       TextColor="#90CAF9"
+                       VerticalOptions="Center"
+                       Margin="5,0,0,0">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding GoToRegisterPageCommand}" />
+                    </Label.GestureRecognizers>
                 </Label>
             </StackLayout>
         </Grid>
