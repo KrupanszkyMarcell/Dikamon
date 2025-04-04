@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Dikamon.Pages.LoginPage"
+             Title="LoginPage">
+    <Grid RowDefinitions="Auto,Auto,Auto"
+      Padding="20">
+
+        <!-- Header with logo and title -->
+        <StackLayout Grid.Row="0" 
+                 Orientation="Horizontal" 
+                 HorizontalOptions="Start"
+                 Spacing="10"
+                 Margin="0,10,0,10">
+            <Image Source="fridgebuddy_chef.png" 
+               WidthRequest="40" 
+               HeightRequest="40" />
+            <Label Text="DiKAMON" 
+               FontFamily="Tiny5" 
+               FontSize="24"
+               VerticalOptions="Center" />
+        </StackLayout>
+
+        <!-- Main content area -->
+        <Grid Grid.Row="1" 
+          RowDefinitions="Auto,*,Auto"
+          Margin="0,5">
+
+            <!-- Title text -->
+            <StackLayout Grid.Row="0" 
+                     Spacing="10" 
+                     Margin="0,20">
+                <Label Text="Bejelentkezés" 
+                   FontFamily="Tiny5" 
+                   FontSize="24" 
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+
+                <Label Text="Üdvözöljük újra! Kérjük, jelentkezzen be." 
+                   FontFamily="Tiny5" 
+                   FontSize="16" 
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+            </StackLayout>
+
+            <!-- Login form -->
+            <Frame Grid.Row="1" 
+               CornerRadius="10" 
+               HasShadow="False" 
+               Padding="20" 
+               BackgroundColor="White"
+               VerticalOptions="Center"
+               Margin="0,30,0,0">
+
+                <StackLayout Spacing="5">
+                    <!-- Email input -->
+                    <StackLayout Spacing="10">
+                        <Label Text="Email cím" 
+                           FontFamily="Tiny5"
+                           FontSize="14"/>
+                        <Frame Padding="10" 
+                           CornerRadius="8" 
+                           BorderColor="#DDDDDD"
+                           HasShadow="False">
+                            <Entry Placeholder="pelda@email.com"
+                               FontFamily="OpenSansRegular"
+                               Keyboard="Email"/>
+                        </Frame>
+                    </StackLayout>
+
+                    <!-- Password input with visibility toggle -->
+                    <StackLayout Spacing="5">
+                        <Label Text="Jelszó" 
+                           FontFamily="Tiny5"
+                           FontSize="14"/>
+                        <Frame Padding="10" 
+                           CornerRadius="8" 
+                           BorderColor="#DDDDDD"
+                           HasShadow="False">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Entry Grid.Column="0"
+                                   Placeholder="Jelszó"
+                                   FontFamily="OpenSansRegular"
+                                   IsPassword="True"
+                                   x:Name="PasswordEntry"/>
+                                <ImageButton Grid.Column="1"
+                                        Source="eye_icon.png"
+                                        WidthRequest="24"
+                                        HeightRequest="24"
+                                        BackgroundColor="Transparent"
+                                        />
+                            </Grid>
+                        </Frame>
+                    </StackLayout>
+
+                    <!-- Stay signed in option -->
+                    <StackLayout Orientation="Horizontal" 
+                             Margin="0,5,0,10">
+                        <CheckBox x:Name="StaySignedInCheckbox"
+                              VerticalOptions="Center"/>
+                        <Label Text="Maradjon bejelentkezve" 
+                           FontFamily="Tiny5"
+                           FontSize="14"
+                           VerticalOptions="Center"/>
+                    </StackLayout>
+
+                    <!-- Login button -->
+                    <Button Text="Bejelentkezés" 
+                        FontFamily="Tiny5" 
+                        BackgroundColor="#FFEE58" 
+                        TextColor="Black"
+                        CornerRadius="8"
+                        HeightRequest="50"
+                        />
+
+                    <!-- Forgot password link -->
+                    <Label Text="Elfelejtette a jelszavát?" 
+                       FontFamily="Tiny5"
+                       FontSize="14"
+                       TextColor="#90CAF9"
+                       HorizontalOptions="Center"
+                       Margin="0,5,0,0">
+
+                    </Label>
+                </StackLayout>
+            </Frame>
+
+            <!-- Register link -->
+            <StackLayout Grid.Row="2" 
+                     Orientation="Horizontal" 
+                     HorizontalOptions="Center"
+                     Margin="0,20,0,0">
+                <Label Text="Nincs még fiókja?" 
+                   FontFamily="Tiny5"
+                   FontSize="14"
+                   VerticalOptions="Center"/>
+                <Label Text="Regisztráció" 
+                   FontFamily="Tiny5"
+                   FontSize="14"
+                   TextColor="#90CAF9"
+                   VerticalOptions="Center"
+                   Margin="5,0,0,0">
+
+                </Label>
+            </StackLayout>
+        </Grid>
+
+        <!-- Footer -->
+        <Label Grid.Row="2" 
+           Text="© 2025 Dikamon" 
+           FontSize="12" 
+           TextColor="Gray"
+           HorizontalOptions="Center" />
+    </Grid>
+</ContentPage>
