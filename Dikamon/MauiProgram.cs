@@ -24,6 +24,8 @@ namespace Dikamon
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<LoginPage>();
             builder.Services.AddSingleton<LoginViewModel>();
+            builder.Services.AddSingleton<RegisterPage>();
+            builder.Services.AddSingleton<RegisterViewModel>();
 #if DEBUG
             builder.Logging.AddDebug();
 #endif

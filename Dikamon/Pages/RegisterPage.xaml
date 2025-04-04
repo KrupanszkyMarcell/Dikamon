@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Dikamon.Pages.RegisterPage"
+             Title="RegisterPage">
+    <Grid RowDefinitions="Auto,*,Auto"
+          Padding="20">
+
+        <!-- Header with logo and title -->
+        <StackLayout Grid.Row="0" 
+                     Orientation="Horizontal" 
+                     HorizontalOptions="Start"
+                     Spacing="10"
+                     Margin="0,10,0,20">
+            <Image Source="fridgebuddy_chef.png" 
+                   WidthRequest="40" 
+                   HeightRequest="40" />
+            <Label Text="DiKAMON" 
+                   FontFamily="Tiny5" 
+                   FontSize="24"
+                   VerticalOptions="Center" />
+        </StackLayout>
+
+        <!-- Main content area -->
+        <ScrollView Grid.Row="1">
+            <Grid RowDefinitions="Auto,*,Auto"
+                  Margin="0,10">
+
+                <!-- Title text -->
+                <StackLayout Grid.Row="0" 
+                             Spacing="10" 
+                             Margin="0,10">
+                    <Label Text="Regisztráció" 
+                           FontFamily="Tiny5" 
+                           FontSize="24" 
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
+
+                    <Label Text="Hozzon létre egy új fiókot!" 
+                           FontFamily="Tiny5" 
+                           FontSize="16" 
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" />
+                </StackLayout>
+
+                <!-- Registration form -->
+                <Frame Grid.Row="1" 
+                       CornerRadius="10" 
+                       HasShadow="False" 
+                       Padding="20" 
+                       BackgroundColor="White"
+                       VerticalOptions="Center"
+                       Margin="0,20,0,0">
+
+                    <StackLayout Spacing="15">
+                        <!-- Name input -->
+                        <StackLayout Spacing="5">
+                            <Label Text="Teljes név" 
+                                   FontFamily="Tiny5"
+                                   FontSize="14"/>
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Entry Placeholder="Adja meg a teljes nevét"
+                                       FontFamily="OpenSansRegular"/>
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Email input -->
+                        <StackLayout Spacing="5">
+                            <Label Text="Email cím" 
+                                   FontFamily="Tiny5"
+                                   FontSize="14"/>
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Entry Placeholder="pelda@email.com"
+                                       FontFamily="OpenSansRegular"
+                                       Keyboard="Email"/>
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Password input with visibility toggle -->
+                        <StackLayout Spacing="5">
+                            <Label Text="Jelszó" 
+                                   FontFamily="Tiny5"
+                                   FontSize="14"/>
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Entry Grid.Column="0"
+                                           Placeholder="Legalább 8 karakter"
+                                           FontFamily="OpenSansRegular"
+                                           IsPassword="True"
+                                           x:Name="PasswordEntry"/>
+                                    <ImageButton Grid.Column="1"
+                                                Source="eye_icon.png"
+                                                WidthRequest="24"
+                                                HeightRequest="24"
+                                                BackgroundColor="Transparent"
+                                                />
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Confirm Password input -->
+                        <StackLayout Spacing="5">
+                            <Label Text="Jelszó megerősítése" 
+                                   FontFamily="Tiny5"
+                                   FontSize="14"/>
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Entry Grid.Column="0"
+                                           Placeholder="Adja meg újra a jelszavát"
+                                           FontFamily="OpenSansRegular"
+                                           IsPassword="True"
+                                           x:Name="ConfirmPasswordEntry"/>
+                                    <ImageButton Grid.Column="1"
+                                                Source="eye_icon.png"
+                                                WidthRequest="24"
+                                                HeightRequest="24"
+                                                BackgroundColor="Transparent"
+                                                />
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Register button -->
+                        <Button Text="Regisztráció" 
+                                FontFamily="Tiny5" 
+                                BackgroundColor="#90CAF9" 
+                                TextColor="Black"
+                                CornerRadius="8"
+                                HeightRequest="50"
+                                />
+                    </StackLayout>
+                </Frame>
+
+                <!-- Login link -->
+                <StackLayout Grid.Row="2" 
+                             Orientation="Horizontal" 
+                             HorizontalOptions="Center"
+                             Margin="0,20,0,0">
+                    <Label Text="Már van fiókja?" 
+                           FontFamily="Tiny5"
+                           FontSize="14"
+                           VerticalOptions="Center"/>
+                    <Label Text="Bejelentkezés" 
+                           FontFamily="Tiny5"
+                           FontSize="14"
+                           TextColor="#FFEE58"
+                           VerticalOptions="Center"
+                           Margin="5,0,0,0">
+
+                    </Label>
+                </StackLayout>
+            </Grid>
+        </ScrollView>
+
+        <!-- Footer -->
+        <Label Grid.Row="2" 
+               Text="© 2025 Dikamon" 
+               FontSize="12" 
+               TextColor="Gray"
+               HorizontalOptions="Center" />
+    </Grid>
+</ContentPage>
