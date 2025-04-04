@@ -18,12 +18,17 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         public Users user = new Users();
 
+        public LoginViewModel(IUserApiCommand userApiCommand)
+        {
+            _userApiCommand = userApiCommand;
+        }
+
         [RelayCommand]
         private async Task Login()
         {
             try
             {
-                string response = await _userApiCommand.LoginUser(User);
+                var response = await _userApiCommand.LoginUser(User);
                 await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
             }
             catch (Exception ex)

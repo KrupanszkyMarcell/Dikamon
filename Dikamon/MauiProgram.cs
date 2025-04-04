@@ -22,7 +22,7 @@ namespace Dikamon
                     fonts.AddFont("Tiny5-Regular.ttf","Tiny5");
                 });
             builder.Services.AddRefitClient<IUserApiCommand>()
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri("http://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api"));
+    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api"));
 
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
