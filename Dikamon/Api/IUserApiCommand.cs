@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Dikamon.DelegatingHandlers;
 using Dikamon.Models;
 using Refit;
 
@@ -23,7 +24,7 @@ namespace Dikamon.Api
         Task RegisterAdmin([Body] Users user);
 
         [Put("/users/login")]
-        Task<Users> LoginUser([Body(buffered: true)] Users user);
+        Task<ApiResponse<Users>> LoginUser([Body(buffered: true)] Users user);
 
         [Put("/users/logout")]
         Task LogoutUser([Body] Users user);

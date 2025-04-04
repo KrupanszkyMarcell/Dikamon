@@ -4,6 +4,7 @@ using Dikamon.ViewModels;
 using Dikamon.Pages;
 using Refit;
 using Dikamon.Api;
+using Dikamon.DelegatingHandlers;
 
 namespace Dikamon
 {
@@ -19,10 +20,13 @@ namespace Dikamon
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-                    fonts.AddFont("Tiny5-Regular.ttf","Tiny5");
+                    fonts.AddFont("Tiny5-Regular.ttf", "Tiny5");
                 });
+
+            builder.Services.AddTransient<CustomUserResponseHandler>();
             builder.Services.AddRefitClient<IUserApiCommand>()
-    .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api"));
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api"))
+                .AddHttpMessageHandler<CustomUserResponseHandler>();
 
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();

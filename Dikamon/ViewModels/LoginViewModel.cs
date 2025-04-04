@@ -29,12 +29,20 @@ namespace Dikamon.ViewModels
             try
             {
                 var response = await _userApiCommand.LoginUser(User);
-                await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
+                if (response.IsSuccessStatusCode)
+                {
+                    var successResponse = response.Content;
+                    await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
+                }
+                else
+                {
+                    var errorResponse = await response.Error.GetContentAsAsync<ErrorMessage>();
+                    await Application.Current.MainPage.DisplayAlert("Login", $"Login failed: {errorResponse.hu}", "OK");
+                }
             }
             catch (Exception ex)
             {
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
-
             }
         }
     }
