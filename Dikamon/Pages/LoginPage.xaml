@@ -62,9 +62,12 @@
                            CornerRadius="8" 
                            BorderColor="#DDDDDD"
                            HasShadow="False">
-                            <Entry Placeholder="pelda@email.com"
+                            <VerticalStackLayout>
+                                <Entry Placeholder="pelda@email.com"
                                FontFamily="OpenSansRegular"
-                               Keyboard="Email"/>
+                               Keyboard="Email"
+                               Text="{Binding User.Email}"/>
+                            </VerticalStackLayout>
                         </Frame>
                     </StackLayout>
 
@@ -82,7 +85,8 @@
                                    Placeholder="Jelszó"
                                    FontFamily="OpenSansRegular"
                                    IsPassword="True"
-                                   x:Name="PasswordEntry"/>
+                                   x:Name="PasswordEntry"
+                                   Text="{Binding User.Password}"/>
                                 <ImageButton Grid.Column="1"
                                         Source="eye_icon.png"
                                         WidthRequest="24"
@@ -111,7 +115,7 @@
                         TextColor="Black"
                         CornerRadius="8"
                         HeightRequest="50"
-                        />
+                        Command="{Binding LoginCommand}" />
 
                     <!-- Forgot password link -->
                     <Label Text="Elfelejtette a jelszavát?" 

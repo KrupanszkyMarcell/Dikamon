@@ -23,7 +23,7 @@ namespace Dikamon.Api
         Task RegisterAdmin([Body] Users user);
 
         [Put("/users/login")]
-        Task LoginUser([Body] Users user);
+        Task<string> LoginUser([Body(buffered: true)] Users user);
 
         [Put("/users/logout")]
         Task LogoutUser([Body] Users user);
