@@ -15,7 +15,7 @@ namespace Dikamon.Api
         Task<List<Users>> GetUsers();
 
         [Get("/users/{id}")]
-        Task<Users> GetUserById(int id);
+        Task<ApiResponse<Users>> GetUserById(int id);
 
         [Post("/users/register")]
         Task<ApiResponse<Users>> RegisterUser([Body] Users user);

@@ -57,6 +57,34 @@ namespace Dikamon.ViewModels
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
             }
         }
+        [RelayCommand]
+        private async Task Test()
+        {
+            try
+            {
+                // This will automatically trigger the token refresh if needed
+                var response = await _userApiCommand.GetUserById(2);
+
+                // If we get here, the request was successful (possibly after a token refresh)
+                var user = response.Content;
+                await Application.Current.MainPage.DisplayAlert("Success", "User retrieved successfully", "OK");
+
+                // Do something with the user...
+            }
+            catch (ApiException ex)
+            {
+                // This will only be hit if the token refresh also failed
+                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", "Session expired. Please log in again.", "OK");
+                    // Navigate to login page
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+                }
+            }
+        }
 
 
         [RelayCommand]

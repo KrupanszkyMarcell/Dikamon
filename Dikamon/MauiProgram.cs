@@ -45,7 +45,8 @@ namespace Dikamon
                                 client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", await SecureStorage.GetAsync("token") ?? string.Empty);
                                 client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
                             })
-                .AddHttpMessageHandler<CustomUserResponseHandler>();
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
 
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
