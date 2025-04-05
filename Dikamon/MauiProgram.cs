@@ -24,8 +24,17 @@ namespace Dikamon
                 });
 
             builder.Services.AddTransient<CustomUserResponseHandler>();
+            builder.Services.AddSingleton<CustomAuthenticatedHttpClientHandler>(sp =>
+            {
+                return new CustomAuthenticatedHttpClientHandler(async () => await SecureStorage.GetAsync("token") ?? string.Empty);
+            });
             builder.Services.AddRefitClient<IUserApiCommand>()
-                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api"))
+                            .ConfigureHttpClient(async (sp, client) =>
+                            {
+                                var handler = sp.GetRequiredService<CustomAuthenticatedHttpClientHandler>();
+                                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", await SecureStorage.GetAsync("token") ?? string.Empty);
+                                client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                            })
                 .AddHttpMessageHandler<CustomUserResponseHandler>();
 
             builder.Services.AddSingleton<MainPage>();
