@@ -5,6 +5,8 @@ using Dikamon.Pages;
 using Refit;
 using Dikamon.Api;
 using Dikamon.DelegatingHandlers;
+using Dikamon.Models;
+using Dikamon.Services;
 
 namespace Dikamon
 {
@@ -24,9 +26,17 @@ namespace Dikamon
                 });
 
             builder.Services.AddTransient<CustomUserResponseHandler>();
+            builder.Services.AddSingleton<ITokenService, TokenService>(); // Add a token service
+
             builder.Services.AddSingleton<CustomAuthenticatedHttpClientHandler>(sp =>
             {
-                return new CustomAuthenticatedHttpClientHandler(async () => await SecureStorage.GetAsync("token") ?? string.Empty);
+                var tokenService = sp.GetRequiredService<ITokenService>();
+                return new CustomAuthenticatedHttpClientHandler(
+                    // Get token function
+                    async () => await tokenService.GetToken(),
+                    // Refresh token function
+                    async () => await tokenService.RefreshToken()
+                );
             });
             builder.Services.AddRefitClient<IUserApiCommand>()
                             .ConfigureHttpClient(async (sp, client) =>

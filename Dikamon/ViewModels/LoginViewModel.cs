@@ -39,8 +39,12 @@ namespace Dikamon.ViewModels
                 {
                     var successResponse = response.Content;
                     await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
-                    await SecureStorage.SetAsync(UserStorageKey,JsonSerializer.Serialize(successResponse));
+                    await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(successResponse));
                     await SecureStorage.SetAsync(TokenStorageKey, successResponse.Token);
+
+                    // Save credentials for potential token refresh (securely)
+                    await SecureStorage.SetAsync("userEmail", User.Email);
+                    await SecureStorage.SetAsync("userPassword", User.Password);
                 }
                 else
                 {
