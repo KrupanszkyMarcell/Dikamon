@@ -54,21 +54,7 @@ namespace Dikamon.ViewModels
             }
         }
 
-        private IUserApiCommand Get_userApiCommand()
-        {
-            return _userApiCommand;
-        }
 
-        private void ConfigureHttpClient(string token, IUserApiCommand _userApiCommand)
-        {
-            var httpClientHandler = new CustomAuthenticatedHttpClientHandler(async () => await SecureStorage.GetAsync(TokenStorageKey));
-            var httpClient = new HttpClient(httpClientHandler);
-            var refitSettings = new RefitSettings
-            {
-                HttpMessageHandlerFactory = () => httpClientHandler
-            };
-            _userApiCommand = RestService.For<IUserApiCommand>(httpClient, refitSettings);
-        }
         [RelayCommand]
         async Task GoToRegisterPage()
         {
