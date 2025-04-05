@@ -115,7 +115,7 @@
                         TextColor="Black"
                         CornerRadius="8"
                         HeightRequest="50"
-                        Command="{Binding TestCommand}" />
+                        Command="{Binding LoginUserCommand}" />
 
                     <!-- Forgot password link -->
                     <Label Text="Elfelejtette a jelszavát?" 

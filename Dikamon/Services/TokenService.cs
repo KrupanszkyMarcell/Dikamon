@@ -35,40 +35,36 @@ namespace Dikamon.Services
             await _semaphore.WaitAsync();
             try
             {
-                // Get stored credentials
                 var email = await SecureStorage.GetAsync("userEmail");
                 var password = await SecureStorage.GetAsync("userPassword");
 
                 if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
                 {
-                    return false; // Can't refresh without credentials
+                    return false;
                 }
-
-                // Create a temporary client without the token handler
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
                 var tempApi = RestService.For<IUserApiCommand>(client);
 
-                // Try to login
-                var user = new Users { Email = email, Password = password };
-
                 try
                 {
+                    var user = new Users { Email = email, Password = password };
                     var response = await tempApi.LoginUser(user);
 
                     if (response.IsSuccessStatusCode && response.Content?.Token != null)
                     {
-                        // Save the new token
                         await SecureStorage.SetAsync("token", response.Content.Token);
                         return true;
+                    }
+                    else
+                    {
+                        return false;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Token refresh failed: {ex.Message}");
+                    return false;
                 }
-
-                return false;
             }
             finally
             {

@@ -26,25 +26,30 @@ namespace Dikamon
                 });
 
             builder.Services.AddTransient<CustomUserResponseHandler>();
-            builder.Services.AddSingleton<ITokenService, TokenService>(); // Add a token service
+            builder.Services.AddSingleton<ITokenService, TokenService>();
 
-            builder.Services.AddSingleton<CustomAuthenticatedHttpClientHandler>(sp =>
+            builder.Services.AddTransient<CustomAuthenticatedHttpClientHandler>(sp =>
             {
                 var tokenService = sp.GetRequiredService<ITokenService>();
-                return new CustomAuthenticatedHttpClientHandler(
-                    // Get token function
+                var handler = new CustomAuthenticatedHttpClientHandler(
                     async () => await tokenService.GetToken(),
-                    // Refresh token function
                     async () => await tokenService.RefreshToken()
                 );
+                return handler;
             });
+
             builder.Services.AddRefitClient<IUserApiCommand>()
-                            .ConfigureHttpClient(async (sp, client) =>
-                            {
-                                var handler = sp.GetRequiredService<CustomAuthenticatedHttpClientHandler>();
-                                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", await SecureStorage.GetAsync("token") ?? string.Empty);
-                                client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
-                            })
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
 
@@ -57,6 +62,7 @@ namespace Dikamon
 
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
+
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
