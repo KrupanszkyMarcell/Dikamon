@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Dikamon.Api;
 using Dikamon.Models;
@@ -28,18 +27,7 @@ namespace Dikamon.Services
 
         public async Task<string> GetToken()
         {
-            var userJson = await SecureStorage.GetAsync("user");
-            if (string.IsNullOrEmpty(userJson))
-                return string.Empty;
-            try
-            {
-                var user = JsonSerializer.Deserialize<Users>(userJson);
-                return user?.Token ?? string.Empty;
-            }
-            catch
-            {
-                return string.Empty;
-            }
+            return await SecureStorage.GetAsync("token") ?? string.Empty;
         }
 
         public async Task<bool> RefreshToken()
@@ -47,27 +35,25 @@ namespace Dikamon.Services
             await _semaphore.WaitAsync();
             try
             {
-                var userJson = await SecureStorage.GetAsync("user");
-                if (string.IsNullOrEmpty(userJson))
-                    return false;
+                var email = await SecureStorage.GetAsync("userEmail");
+                var password = await SecureStorage.GetAsync("userPassword");
 
-                var user = JsonSerializer.Deserialize<Users>(userJson);
-                if (user == null || string.IsNullOrEmpty(user.Email) || string.IsNullOrEmpty(user.Password))
+                if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+                {
                     return false;
-
+                }
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
                 var tempApi = RestService.For<IUserApiCommand>(client);
 
                 try
                 {
-                    var loginUser = new Users { Email = user.Email, Password = user.Password };
-                    var response = await tempApi.LoginUser(loginUser);
+                    var user = new Users { Email = email, Password = password };
+                    var response = await tempApi.LoginUser(user);
 
                     if (response.IsSuccessStatusCode && response.Content?.Token != null)
                     {
-                        user.Token = response.Content.Token;
-                        await SecureStorage.SetAsync("user", JsonSerializer.Serialize(user));
+                        await SecureStorage.SetAsync("token", response.Content.Token);
                         return true;
                     }
                     else

@@ -41,6 +41,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
@@ -48,6 +54,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                    client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
@@ -55,7 +67,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
-
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
@@ -63,6 +80,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
@@ -70,6 +93,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
@@ -77,6 +106,12 @@ namespace Dikamon
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
