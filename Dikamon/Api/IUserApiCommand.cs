@@ -12,7 +12,7 @@ namespace Dikamon.Api
     public interface IUserApiCommand
     {
         [Get("/users")]
-        Task<List<Users>> GetUsers();
+        Task<ApiResponse<List<Users>>> GetUsers();
 
         [Get("/users/{id}")]
         Task<ApiResponse<Users>> GetUserById(int id);

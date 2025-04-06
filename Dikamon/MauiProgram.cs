@@ -26,8 +26,6 @@ namespace Dikamon
                 });
 
             builder.Services.AddTransient<CustomUserResponseHandler>();
-            builder.Services.AddSingleton<ITokenService, TokenService>();
-
             builder.Services.AddTransient<CustomAuthenticatedHttpClientHandler>(sp =>
             {
                 var tokenService = sp.GetRequiredService<ITokenService>();
@@ -37,21 +35,87 @@ namespace Dikamon
                 );
                 return handler;
             });
+            builder.Services.AddSingleton<ITokenService, TokenService>();
 
             builder.Services.AddRefitClient<IUserApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
                     client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
-
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
-                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+            builder.Services.AddRefitClient<IIngredientsApiCommand>()
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                    client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+            builder.Services.AddRefitClient<IItemsApiCommand>()
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+            builder.Services.AddRefitClient<IItemTypesApiCommand>()
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+            builder.Services.AddRefitClient<IRecipesApiCommand>()
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+            builder.Services.AddRefitClient<IStoredItemsApiCommand>()
+                .ConfigureHttpClient(async (sp, client) =>
+                {
+                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    var token = await SecureStorage.GetAsync("token");
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    }
+                })
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
 
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
@@ -59,9 +123,12 @@ namespace Dikamon
             builder.Services.AddSingleton<LoginViewModel>();
             builder.Services.AddSingleton<RegisterPage>();
             builder.Services.AddSingleton<RegisterViewModel>();
+            builder.Services.AddSingleton<MyKitchenPage>();
+            builder.Services.AddSingleton<MyKitchenViewModel>();
 
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
+            Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
 
 #if DEBUG
             builder.Logging.AddDebug();
