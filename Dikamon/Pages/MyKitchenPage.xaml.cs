@@ -4,9 +4,9 @@ namespace Dikamon.Pages;
 
 public partial class MyKitchenPage : ContentPage
 {
-	public MyKitchenPage(MyKitchenViewModel vm)
-	{
-		InitializeComponent();
-		this.BindingContext = vm;
+    public MyKitchenPage(MyKitchenViewModel vm)
+    {
+        InitializeComponent();
+        BindingContext = vm;
     }
 }
