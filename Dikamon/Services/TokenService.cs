@@ -13,6 +13,8 @@ namespace Dikamon.Services
         Task<string> GetToken();
         Task<bool> RefreshToken();
         Task<Users> GetCurrentUser();
+        Task StoreUserData(Users user);
+        Task ClearUserData();
     }
 
     public class TokenService : ITokenService
@@ -53,7 +55,10 @@ namespace Dikamon.Services
         {
             // Return cached token if available
             if (!string.IsNullOrEmpty(_cachedToken))
+            {
+                Debug.WriteLine("Using cached token");
                 return _cachedToken;
+            }
 
             // Try getting the user first
             var userJson = await SecureStorage.GetAsync(UserStorageKey);
@@ -67,15 +72,72 @@ namespace Dikamon.Services
             {
                 var user = JsonSerializer.Deserialize<Users>(userJson);
                 _cachedUser = user;
-                _cachedToken = user?.Token ?? string.Empty;
+                _cachedToken = user?.Token;
 
-                Debug.WriteLine($"Token retrieved: {!string.IsNullOrEmpty(_cachedToken)}");
+                if (string.IsNullOrEmpty(_cachedToken))
+                {
+                    Debug.WriteLine("Token is empty or null from storage");
+                    return string.Empty;
+                }
+
+                Debug.WriteLine("Token retrieved from storage successfully");
                 return _cachedToken;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error retrieving token: {ex.Message}");
                 return string.Empty;
+            }
+        }
+
+        public async Task StoreUserData(Users user)
+        {
+            if (user == null)
+            {
+                Debug.WriteLine("Cannot store null user");
+                return;
+            }
+
+            await _semaphore.WaitAsync();
+            try
+            {
+                _cachedUser = user;
+                _cachedToken = user.Token;
+
+                // Ensure we're not saving a null token
+                if (!string.IsNullOrEmpty(_cachedToken))
+                {
+                    Debug.WriteLine($"Storing user with token in secure storage");
+                    await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(user));
+                }
+                else
+                {
+                    Debug.WriteLine("User has no token, not storing");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error storing user data: {ex.Message}");
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        public async Task ClearUserData()
+        {
+            await _semaphore.WaitAsync();
+            try
+            {
+                _cachedUser = null;
+                _cachedToken = null;
+                SecureStorage.Remove(UserStorageKey);
+                Debug.WriteLine("User data cleared");
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
 
@@ -111,9 +173,15 @@ namespace Dikamon.Services
                     if (response.IsSuccessStatusCode && response.Content?.Token != null)
                     {
                         user.Token = response.Content.Token;
+                        // Update user ID if it was provided
+                        if (response.Content.Id.HasValue)
+                        {
+                            user.Id = response.Content.Id;
+                        }
 
                         _cachedToken = user.Token;
                         _cachedUser = user;
+
                         await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(user));
 
                         Debug.WriteLine("Token refreshed successfully");
