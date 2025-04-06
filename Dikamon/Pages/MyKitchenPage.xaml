@@ -107,10 +107,11 @@
                                                    FontAttributes="Bold"/>
                                         </Grid>
                                     </Frame>
-
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectCategoryCommand}" CommandParameter="{Binding .}" />
-
                                 </Grid>
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectCategoryCommand}" 
+                                                          CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
                             </Frame>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
@@ -193,12 +194,8 @@
                                                     HeightRequest="30"
                                                     Padding="0"
                                                     Margin="0,0,5,0"
-                                                    CommandParameter="{Binding .}">
-                                                <Button.Command>
-                                                    <Binding Path="BindingContext.InfoCommand" 
-                                                             Source="{RelativeSource AncestorType={x:Type ContentPage}}" />
-                                                </Button.Command>
-                                            </Button>
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.InfoCommand}"
+                                                    CommandParameter="{Binding .}"/>
                                             <Button Text="↓"
                                                     FontSize="16"
                                                     BackgroundColor="#26283b"
@@ -207,12 +204,8 @@
                                                     WidthRequest="30"
                                                     HeightRequest="30"
                                                     Padding="0"
-                                                    CommandParameter="{Binding .}">
-                                                <Button.Command>
-                                                    <Binding Path="BindingContext.DecreaseQuantityCommand" 
-                                                             Source="{RelativeSource AncestorType={x:Type ContentPage}}" />
-                                                </Button.Command>
-                                            </Button>
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DecreaseQuantityCommand}"
+                                                    CommandParameter="{Binding .}"/>
                                         </StackLayout>
                                     </StackLayout>
                                 </Grid>
