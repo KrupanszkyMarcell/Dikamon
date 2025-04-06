@@ -11,7 +11,6 @@ using Dikamon.Api;
 using Dikamon.DelegatingHandlers;
 using Dikamon.Models;
 using Dikamon.Pages;
-using Dikamon.Services;
 using Refit;
 
 namespace Dikamon.ViewModels
@@ -19,16 +18,14 @@ namespace Dikamon.ViewModels
     public partial class LoginViewModel : ObservableObject
     {
         private readonly IUserApiCommand _userApiCommand;
-        private readonly ITokenService _tokenService;
         private const string UserStorageKey = "user";
 
         [ObservableProperty]
         public Users user = new Users();
 
-        public LoginViewModel(IUserApiCommand userApiCommand, ITokenService tokenService)
+        public LoginViewModel(IUserApiCommand userApiCommand)
         {
             _userApiCommand = userApiCommand;
-            _tokenService = tokenService;
         }
 
         [RelayCommand]
