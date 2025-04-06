@@ -33,7 +33,7 @@ namespace Dikamon.ViewModels
         {
             try
             {
-                var response = await _userApiCommand.LoginUser(User);
+                var response = await _userApiCommand.GetUsers();
                 if (response.IsSuccessStatusCode)
                 {
                     var successResponse = response.Content;
