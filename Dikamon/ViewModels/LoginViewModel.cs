@@ -19,7 +19,6 @@ namespace Dikamon.ViewModels
     {
         private readonly IUserApiCommand _userApiCommand;
         private const string UserStorageKey = "user";
-        private const string TokenStorageKey = "token";
 
         [ObservableProperty]
         public Users user = new Users();
@@ -40,9 +39,6 @@ namespace Dikamon.ViewModels
                     var successResponse = response.Content;
                     await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
                     await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(successResponse));
-                    await SecureStorage.SetAsync(TokenStorageKey, successResponse.Token);
-                    await SecureStorage.SetAsync("userEmail", User.Email);
-                    await SecureStorage.SetAsync("userPassword", User.Password);
                 }
                 else
                 {
