@@ -125,10 +125,13 @@ namespace Dikamon
             builder.Services.AddSingleton<RegisterViewModel>();
             builder.Services.AddSingleton<MyKitchenPage>();
             builder.Services.AddSingleton<MyKitchenViewModel>();
+            builder.Services.AddSingleton<AfterLoginMainPage>();
+            builder.Services.AddSingleton<AfterLoginMainViewModel>();
 
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
             Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
+            Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
 
 #if DEBUG
             builder.Logging.AddDebug();

@@ -43,6 +43,7 @@ namespace Dikamon.ViewModels
                     await SecureStorage.SetAsync(TokenStorageKey, successResponse.Token);
                     await SecureStorage.SetAsync("userEmail", User.Email);
                     await SecureStorage.SetAsync("userPassword", User.Password);
+                    await Shell.Current.GoToAsync($"{nameof(AfterLoginMainPage)}", true);
                 }
                 else
                 {
