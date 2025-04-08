@@ -34,16 +34,10 @@ namespace Dikamon.ViewModels
         {
             try
             {
-                var response = await _userApiCommand.LoginUser(User);
+                var response = await _userApiCommand.GetUsers();
                 if (response.IsSuccessStatusCode)
                 {
-                    var successResponse = response.Content;
-                    await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
-                    await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(successResponse));
-                    await SecureStorage.SetAsync(TokenStorageKey, successResponse.Token);
-                    await SecureStorage.SetAsync("userEmail", User.Email);
-                    await SecureStorage.SetAsync("userPassword", User.Password);
-                    await Shell.Current.GoToAsync($"{nameof(AfterLoginMainPage)}", true);
+
                 }
                 else
                 {
