@@ -23,7 +23,7 @@
                        HeightRequest="75"
                        Margin="0,0,10,0"/>
                 <StackLayout VerticalOptions="Center">
-                    <Label Text="Szervusz, Márton!" 
+                    <Label Text="{Binding UserName, StringFormat='Szervusz, {0}!'}" 
                            FontFamily="Tiny5" 
                            FontSize="28" 
                            HorizontalOptions="Start"
@@ -118,6 +118,15 @@
                                 Command="{Binding GoToRecipesCommand}"/>
                     </StackLayout>
                 </Frame>
+
+                <!-- Logout Button -->
+                <Button Text="Kijelentkezés" 
+                        BackgroundColor="#FF5252" 
+                        TextColor="White" 
+                        CornerRadius="8" 
+                        HeightRequest="50" 
+                        Margin="0,20,0,0"
+                        Command="{Binding LogoutCommand}"/>
             </StackLayout>
         </ScrollView>
     </Grid>

@@ -5,11 +5,22 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Dikamon.Pages"
     Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
     Title="Dikamon">
+
+    <Shell.ItemTemplate>
+        <DataTemplate>
+            <Grid />
+        </DataTemplate>
+    </Shell.ItemTemplate>
 
     <ShellContent
         Title="Welcome"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
+    <ShellContent
+        Title="Home"
+        ContentTemplate="{DataTemplate local:AfterLoginMainPage}"
+        Route="AfterLoginMainPage" />
 </Shell>

@@ -40,24 +40,6 @@
                       FontSize="28" 
                       HorizontalOptions="Center"
                       Margin="0,0,0,15"/>
-
-                <Frame Grid.Row="1"
-                      BackgroundColor="White" 
-                      CornerRadius="10" 
-                      Padding="10" 
-                      Margin="0,0,0,10">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <Entry Grid.Column="0"
-                              Placeholder="Keresés..." 
-                              PlaceholderColor="Gray"
-                              VerticalOptions="Center" />
-                        <Image Grid.Column="1" 
-                              Source="search_icon.png" 
-                              WidthRequest="20" 
-                              HeightRequest="20"
-                              VerticalOptions="Center" />
-                    </Grid>
-                </Frame>
             </Grid>
 
             <!-- Food Category Cards -->

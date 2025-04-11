@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dikamon.Pages;
+using Dikamon.Services;
 
 namespace Dikamon.ViewModels
 {
@@ -14,8 +12,12 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         private string userName = string.Empty;
 
-        public AfterLoginMainViewModel()
+        private readonly ITokenService _tokenService;
+
+        public AfterLoginMainViewModel(ITokenService tokenService = null)
         {
+            _tokenService = tokenService;
+
             // Try to get the user name from secure storage
             LoadUserName();
         }
@@ -62,11 +64,22 @@ namespace Dikamon.ViewModels
 
             if (answer)
             {
-                SecureStorage.Remove("token");
-                SecureStorage.Remove("user");
-                SecureStorage.Remove("userEmail");
-                SecureStorage.Remove("userPassword");
+                // Clear all stored credentials
+                if (_tokenService != null)
+                {
+                    await _tokenService.ClearAllCredentials();
+                }
+                else
+                {
+                    // Fallback if token service isn't available
+                    SecureStorage.Remove("token");
+                    SecureStorage.Remove("user");
+                    SecureStorage.Remove("userEmail");
+                    SecureStorage.Remove("userPassword");
+                    SecureStorage.Remove("userId");
+                }
 
+                // Navigate back to the main page
                 await Shell.Current.GoToAsync("//MainPage", true);
             }
         }

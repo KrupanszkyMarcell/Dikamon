@@ -26,6 +26,9 @@ namespace Dikamon
                 });
 
             // Register services and handlers
+            // Register the token service first since other services depend on it
+            builder.Services.AddSingleton<ITokenService, TokenService>();
+
             builder.Services.AddTransient<CustomUserResponseHandler>();
             builder.Services.AddTransient<CustomAuthenticatedHttpClientHandler>(sp =>
             {
@@ -36,7 +39,6 @@ namespace Dikamon
                 );
                 return handler;
             });
-            builder.Services.AddSingleton<ITokenService, TokenService>();
 
             // Configure HTTP Client
             var apiBaseUrl = "https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api";
