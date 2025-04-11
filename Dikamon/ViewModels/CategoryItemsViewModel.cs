@@ -300,48 +300,129 @@ namespace Dikamon.ViewModels
                     return;
                 }
 
-                // Search for items of this category
-                System.Diagnostics.Debug.WriteLine($"Calling API to search for '{SearchText}' in category {CategoryId} for user {_userId}");
-                var response = await _storedItemsApiCommand.GetStoredItemsByTypeIdAndSearch(_userId, CategoryId, SearchText);
-
-                if (response.IsSuccessStatusCode && response.Content != null)
+                // First, try to load all items for this category if we don't have them yet
+                if (CategoryItems.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Search returned {response.Content.Count} results");
+                    await LoadCategoryItemsAsync();
+                }
 
-                    // Clear and repopulate the collection
-                    CategoryItems.Clear();
+                // Try category-specific API search first
+                System.Diagnostics.Debug.WriteLine($"Calling typed API search for '{SearchText}' in category {CategoryId} for user {_userId}");
+                var typedResponse = await _storedItemsApiCommand.GetStoredItemsByTypeIdAndSearch(_userId, CategoryId, SearchText);
 
-                    foreach (var item in response.Content)
+                var apiSearchResults = new List<Stores>();
+
+                // Process typed search results
+                if (typedResponse.IsSuccessStatusCode && typedResponse.Content != null && typedResponse.Content.Count > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Typed API search returned {typedResponse.Content.Count} results");
+
+                    foreach (var item in typedResponse.Content)
                     {
-                        // Make sure the StoredItem property is populated
-                        if (item.StoredItem == null && item.ItemId > 0)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to find it in available items");
-                            var matchingItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
-                            if (matchingItem != null)
-                            {
-                                item.StoredItem = matchingItem;
-                            }
-                        }
-
+                        PopulateStoredItem(item);
                         if (item.StoredItem != null)
                         {
-                            CategoryItems.Add(item);
-                            System.Diagnostics.Debug.WriteLine($"Added search result: {item.StoredItem.Name}");
+                            apiSearchResults.Add(item);
                         }
                     }
+                }
+                // If typed search returned no results, try general search
+                else if (typedResponse.IsSuccessStatusCode) // API call succeeded but returned no items
+                {
+                    System.Diagnostics.Debug.WriteLine($"Typed API search returned no results, trying general search");
 
-                    if (CategoryItems.Count == 0)
+                    // Try the general search API
+                    var generalResponse = await _storedItemsApiCommand.GetStoredItemsBySearch(_userId, SearchText);
+
+                    if (generalResponse.IsSuccessStatusCode && generalResponse.Content != null)
                     {
-                        System.Diagnostics.Debug.WriteLine("No items found matching the search criteria");
-                        // Optionally show a message when no items found
-                        await Application.Current.MainPage.DisplayAlert("Információ", $"Nincs találat a keresésre: '{SearchText}'", "OK");
+                        System.Diagnostics.Debug.WriteLine($"General API search returned {generalResponse.Content.Count} results, filtering for current category");
+
+                        // Filter the general results to only include items from our category
+                        foreach (var item in generalResponse.Content)
+                        {
+                            PopulateStoredItem(item);
+
+                            // Check if the item belongs to our category
+                            if (item.StoredItem != null)
+                            {
+                                // First, check if we can determine the category from the stored item
+                                bool isInCategory = item.StoredItem.TypeId == CategoryId;
+
+                                // If we can't determine from the stored item, check available items
+                                if (!isInCategory)
+                                {
+                                    var availableItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
+                                    isInCategory = availableItem != null && availableItem.TypeId == CategoryId;
+                                }
+
+                                if (isInCategory)
+                                {
+                                    apiSearchResults.Add(item);
+                                    System.Diagnostics.Debug.WriteLine($"Added item from general search: {item.StoredItem.Name}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"General API search failed: {generalResponse.Error?.Content}");
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Search API call failed: {response.Error?.Content}");
-                    await Application.Current.MainPage.DisplayAlert("Hiba", "A keresés nem sikerült", "OK");
+                    System.Diagnostics.Debug.WriteLine($"Typed API search failed: {typedResponse.Error?.Content}");
+                }
+
+                // Helper method to populate StoredItem if null
+                void PopulateStoredItem(Stores item)
+                {
+                    if (item.StoredItem == null && item.ItemId > 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to find it in available items");
+                        var matchingItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
+                        if (matchingItem != null)
+                        {
+                            item.StoredItem = matchingItem;
+                        }
+                    }
+                }
+
+                // If API search found items, use those results
+                // Otherwise, filter locally to handle partial matches the API might have missed
+                List<Stores> searchResults;
+
+                if (apiSearchResults.Count > 0)
+                {
+                    searchResults = apiSearchResults;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("API searches returned no results, filtering locally");
+                    // Perform a local search on the already loaded items
+                    searchResults = CategoryItems
+                        .Where(item =>
+                            item.StoredItem != null &&
+                            (item.StoredItem.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                             (item.StoredItem.Name_EN != null && item.StoredItem.Name_EN.Contains(SearchText, StringComparison.OrdinalIgnoreCase))))
+                        .ToList();
+
+                    System.Diagnostics.Debug.WriteLine($"Local search found {searchResults.Count} results");
+                }
+
+                // Clear and repopulate the collection
+                CategoryItems.Clear();
+
+                foreach (var item in searchResults)
+                {
+                    CategoryItems.Add(item);
+                    System.Diagnostics.Debug.WriteLine($"Added search result: {item.StoredItem?.Name}");
+                }
+
+                if (CategoryItems.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("No items found matching the search criteria");
+                    await Application.Current.MainPage.DisplayAlert("Információ", $"Nincs találat a keresésre: '{SearchText}'", "OK");
                 }
             }
             catch (Exception ex)
