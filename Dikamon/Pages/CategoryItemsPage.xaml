@@ -97,18 +97,12 @@
                                           FontAttributes="Bold" 
                                           FontSize="16"/>
 
-                                    <!-- Item Quantity with unit -->
+                                    <!-- Item Quantity with unit using QuantityToTextConverter properly -->
                                     <Label Grid.Row="1" 
                                           Grid.Column="1"
                                           TextColor="Gray"
-                                          FontSize="14">
-                                        <Label.Text>
-                                            <MultiBinding StringFormat="{}{0} {1}">
-                                                <Binding Path="Quantity" />
-                                                <Binding Path="StoredItem.Unit" TargetNullValue="db" />
-                                            </MultiBinding>
-                                        </Label.Text>
-                                    </Label>
+                                          FontSize="14"
+                                          Text="{Binding Quantity, Converter={StaticResource QuantityConverter}, ConverterParameter={Binding .}}"/>
 
                                     <!-- Control Buttons -->
                                     <StackLayout Grid.Row="0" 
@@ -122,8 +116,8 @@
                                               CornerRadius="20"
                                               BackgroundColor="#FFEE58"
                                               TextColor="Black"
-                                              Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoryItemsViewModel}}, Path=DecrementCommand}"
-                                              CommandParameter="{Binding}"/>
+                                              Command="{Binding BindingContext.DecrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                              CommandParameter="{Binding .}"/>
 
                                         <Button Text="+" 
                                               WidthRequest="40" 
@@ -132,8 +126,8 @@
                                               Margin="5,0,0,0"
                                               BackgroundColor="#90CAF9"
                                               TextColor="Black"
-                                              Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CategoryItemsViewModel}}, Path=IncrementCommand}"
-                                              CommandParameter="{Binding}"/>
+                                              Command="{Binding BindingContext.IncrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                              CommandParameter="{Binding .}"/>
                                     </StackLayout>
                                 </Grid>
                             </Frame>

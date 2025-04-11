@@ -403,13 +403,20 @@ namespace Dikamon.ViewModels
             try
             {
                 item.Quantity += 1;
-                await _storedItemsApiCommand.AddStoredItem(item);
+                var response = await _storedItemsApiCommand.AddStoredItem(item);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"API error when incrementing: {response.Error?.Content}");
+                    item.Quantity -= 1; // Revert the change on API error
+                    await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült növelni a mennyiséget", "OK");
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error incrementing item: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült növelni a mennyiséget", "OK");
                 item.Quantity -= 1; // Revert the change
+                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült növelni a mennyiséget", "OK");
             }
         }
 
@@ -431,21 +438,36 @@ namespace Dikamon.ViewModels
 
                     if (remove)
                     {
-                        await _storedItemsApiCommand.DeleteStoredItem(item);
-                        CategoryItems.Remove(item);
+                        var response = await _storedItemsApiCommand.DeleteStoredItem(item);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            CategoryItems.Remove(item);
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"API error when deleting: {response.Error?.Content}");
+                            await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült törölni a terméket", "OK");
+                        }
                     }
                 }
                 else
                 {
                     item.Quantity -= 1;
-                    await _storedItemsApiCommand.AddStoredItem(item);
+                    var response = await _storedItemsApiCommand.AddStoredItem(item);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"API error when decrementing: {response.Error?.Content}");
+                        item.Quantity += 1; // Revert the change on API error
+                        await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült csökkenteni a mennyiséget", "OK");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error decrementing item: {ex.Message}");
+                if (item.Quantity > 0) item.Quantity += 1; // Revert the change if we decremented
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült csökkenteni a mennyiséget", "OK");
-                item.Quantity += 1; // Revert the change
             }
         }
     }
