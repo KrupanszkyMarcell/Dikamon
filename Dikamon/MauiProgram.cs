@@ -131,6 +131,8 @@ namespace Dikamon
 
             // Register converters
             builder.Services.AddSingleton<QuantityToTextConverter>();
+            builder.Services.AddSingleton<InvertedBoolConverter>();
+            builder.Services.AddSingleton<StringNotEmptyConverter>();
 
             // Register routes
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));

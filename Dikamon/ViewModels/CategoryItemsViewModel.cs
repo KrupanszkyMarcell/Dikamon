@@ -280,8 +280,11 @@ namespace Dikamon.ViewModels
         [RelayCommand]
         private async Task Search()
         {
+            System.Diagnostics.Debug.WriteLine($"Search initiated with text: '{SearchText}'");
+
             if (string.IsNullOrWhiteSpace(SearchText))
             {
+                // If search text is empty, just reload all items
                 await LoadCategoryItemsAsync();
                 return;
             }
@@ -290,23 +293,55 @@ namespace Dikamon.ViewModels
             {
                 IsLoading = true;
 
+                if (_userId == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("Cannot search items: User ID is 0");
+                    await Application.Current.MainPage.DisplayAlert("Hiba", "Felhasználói azonosító nem található", "OK");
+                    return;
+                }
+
                 // Search for items of this category
+                System.Diagnostics.Debug.WriteLine($"Calling API to search for '{SearchText}' in category {CategoryId} for user {_userId}");
                 var response = await _storedItemsApiCommand.GetStoredItemsByTypeIdAndSearch(_userId, CategoryId, SearchText);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Search returned {response.Content.Count} results");
+
+                    // Clear and repopulate the collection
                     CategoryItems.Clear();
+
                     foreach (var item in response.Content)
                     {
+                        // Make sure the StoredItem property is populated
+                        if (item.StoredItem == null && item.ItemId > 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to find it in available items");
+                            var matchingItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
+                            if (matchingItem != null)
+                            {
+                                item.StoredItem = matchingItem;
+                            }
+                        }
+
                         if (item.StoredItem != null)
                         {
                             CategoryItems.Add(item);
+                            System.Diagnostics.Debug.WriteLine($"Added search result: {item.StoredItem.Name}");
                         }
+                    }
+
+                    if (CategoryItems.Count == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine("No items found matching the search criteria");
+                        // Optionally show a message when no items found
+                        await Application.Current.MainPage.DisplayAlert("Információ", $"Nincs találat a keresésre: '{SearchText}'", "OK");
                     }
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine($"Search API call failed: {response.Error?.Content}");
+                    await Application.Current.MainPage.DisplayAlert("Hiba", "A keresés nem sikerült", "OK");
                 }
             }
             catch (Exception ex)

@@ -10,6 +10,8 @@
 
     <ContentPage.Resources>
         <services:QuantityToTextConverter x:Key="QuantityConverter" />
+        <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        <services:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*"
@@ -51,90 +53,117 @@
                   Margin="0,0,0,20">
                 <Grid ColumnDefinitions="*,Auto">
                     <Entry Grid.Column="0"
-                          Placeholder="Keresés..." 
+                          Placeholder="Keresés élelmiszer neve szerint..." 
                           PlaceholderColor="Gray"
                           Text="{Binding SearchText}"
+                          ReturnType="Search"
+                          ReturnCommand="{Binding SearchCommand}"
                           VerticalOptions="Center" />
-                    <ImageButton Grid.Column="1" 
-                                Source="search_icon.png" 
-                                WidthRequest="20" 
-                                HeightRequest="20"
-                                BackgroundColor="Transparent"
-                                Command="{Binding SearchCommand}"
-                                VerticalOptions="Center" />
+                    <Button Grid.Column="1" 
+                           BackgroundColor="Transparent"
+                           TextColor="#26283b"
+                           FontFamily="Tiny5"
+                           Text="Keresés"
+                           Command="{Binding SearchCommand}"
+                           VerticalOptions="Center" />
                 </Grid>
             </Frame>
 
-            <!-- Items List - Fixed to show direct binding -->
-            <RefreshView Grid.Row="2"
-                        IsRefreshing="{Binding IsRefreshing}" 
-                        Command="{Binding RefreshCommand}">
-                <CollectionView ItemsSource="{Binding CategoryItems}"
-                              EmptyView="Nincsenek elemek ebben a kategóriában">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="model:Stores">
-                            <Frame Margin="0,5" 
-                                  Padding="10" 
-                                  CornerRadius="10" 
-                                  BackgroundColor="White"
-                                  HasShadow="False">
-                                <Grid ColumnDefinitions="Auto,*,Auto" 
-                                     RowDefinitions="Auto,Auto">
-                                    <!-- Item Image -->
-                                    <Image Grid.Row="0" 
-                                          Grid.RowSpan="2" 
-                                          Grid.Column="0"
-                                          Source="{Binding StoredItem.Image}" 
-                                          WidthRequest="60" 
-                                          HeightRequest="60"
-                                          Margin="0,0,10,0"
-                                          Aspect="AspectFit"/>
+            <!-- Items List with loading indicator -->
+            <Grid Grid.Row="2">
+                <!-- Loading indicator -->
+                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                 IsVisible="{Binding IsLoading}"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center"
+                                 Color="#FFEE58" />
 
-                                    <!-- Item Name -->
-                                    <Label Grid.Row="0" 
-                                          Grid.Column="1"
-                                          Text="{Binding StoredItem.Name}" 
-                                          FontAttributes="Bold" 
-                                          FontSize="16"/>
+                <RefreshView IsRefreshing="{Binding IsRefreshing}" 
+                            Command="{Binding RefreshCommand}"
+                            IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                    <CollectionView ItemsSource="{Binding CategoryItems}">
+                        <!-- Empty view template -->
+                        <CollectionView.EmptyView>
+                            <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                                <Image Source="empty_box.png" HeightRequest="100" WidthRequest="100" Opacity="0.6" />
+                                <Label Text="Nincsenek termékek ebben a kategóriában" 
+                                      FontSize="16" 
+                                      TextColor="Gray"
+                                      HorizontalTextAlignment="Center"
+                                      Margin="0,10" />
+                                <Label Text="{Binding SearchText, StringFormat='A keresés során nem található termék: \{0\}'}" 
+                                      IsVisible="{Binding SearchText, Converter={StaticResource StringNotEmptyConverter}}"
+                                      FontSize="14" 
+                                      TextColor="Gray"
+                                      HorizontalTextAlignment="Center" />
+                            </StackLayout>
+                        </CollectionView.EmptyView>
 
-                                    <!-- Item Quantity with unit using QuantityToTextConverter properly -->
-                                    <Label Grid.Row="1" 
-                                          Grid.Column="1"
-                                          TextColor="Gray"
-                                          FontSize="14"
-                                          Text="{Binding Quantity, Converter={StaticResource QuantityConverter}, ConverterParameter={Binding .}}"/>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="model:Stores">
+                                <Frame Margin="0,5" 
+                                      Padding="10" 
+                                      CornerRadius="10" 
+                                      BackgroundColor="White"
+                                      HasShadow="False">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" 
+                                         RowDefinitions="Auto,Auto">
+                                        <!-- Item Image -->
+                                        <Image Grid.Row="0" 
+                                              Grid.RowSpan="2" 
+                                              Grid.Column="0"
+                                              Source="{Binding StoredItem.Image}" 
+                                              WidthRequest="60" 
+                                              HeightRequest="60"
+                                              Margin="0,0,10,0"
+                                              Aspect="AspectFit"/>
 
-                                    <!-- Control Buttons -->
-                                    <StackLayout Grid.Row="0" 
-                                                Grid.RowSpan="2" 
-                                                Grid.Column="2" 
-                                                Orientation="Horizontal" 
-                                                VerticalOptions="Center">
-                                        <Button Text="-" 
-                                              WidthRequest="40" 
-                                              HeightRequest="40" 
-                                              CornerRadius="20"
-                                              BackgroundColor="#FFEE58"
-                                              TextColor="Black"
-                                              Command="{Binding BindingContext.DecrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
-                                              CommandParameter="{Binding .}"/>
+                                        <!-- Item Name -->
+                                        <Label Grid.Row="0" 
+                                              Grid.Column="1"
+                                              Text="{Binding StoredItem.Name}" 
+                                              FontAttributes="Bold" 
+                                              FontSize="16"/>
 
-                                        <Button Text="+" 
-                                              WidthRequest="40" 
-                                              HeightRequest="40" 
-                                              CornerRadius="20"
-                                              Margin="5,0,0,0"
-                                              BackgroundColor="#90CAF9"
-                                              TextColor="Black"
-                                              Command="{Binding BindingContext.IncrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
-                                              CommandParameter="{Binding .}"/>
-                                    </StackLayout>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </RefreshView>
+                                        <!-- Item Quantity with unit -->
+                                        <Label Grid.Row="1" 
+                                              Grid.Column="1"
+                                              TextColor="Gray"
+                                              FontSize="14"
+                                              Text="{Binding Quantity, Converter={StaticResource QuantityConverter}, ConverterParameter={Binding .}}"/>
+
+                                        <!-- Control Buttons -->
+                                        <StackLayout Grid.Row="0" 
+                                                    Grid.RowSpan="2" 
+                                                    Grid.Column="2" 
+                                                    Orientation="Horizontal" 
+                                                    VerticalOptions="Center">
+                                            <Button Text="-" 
+                                                  WidthRequest="40" 
+                                                  HeightRequest="40" 
+                                                  CornerRadius="20"
+                                                  BackgroundColor="#FFEE58"
+                                                  TextColor="Black"
+                                                  Command="{Binding BindingContext.DecrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                  CommandParameter="{Binding .}"/>
+
+                                            <Button Text="+" 
+                                                  WidthRequest="40" 
+                                                  HeightRequest="40" 
+                                                  CornerRadius="20"
+                                                  Margin="5,0,0,0"
+                                                  BackgroundColor="#90CAF9"
+                                                  TextColor="Black"
+                                                  Command="{Binding BindingContext.IncrementCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}}"
+                                                  CommandParameter="{Binding .}"/>
+                                        </StackLayout>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+            </Grid>
 
             <!-- Add Button -->
             <Button Grid.Row="3"
@@ -144,13 +173,6 @@
                    CornerRadius="10"
                    Margin="0,10,0,0"
                    Command="{Binding AddItemCommand}"/>
-
-            <!-- Debug information to check data binding -->
-            <StackLayout Grid.Row="1" Grid.RowSpan="3" IsVisible="False">
-                <Label Text="{Binding CategoryName}" />
-                <Label Text="{Binding CategoryId}" />
-                <Label Text="{Binding CategoryItems.Count, StringFormat='Items count: {0}'}" />
-            </StackLayout>
         </Grid>
     </Grid>
 </ContentPage>
