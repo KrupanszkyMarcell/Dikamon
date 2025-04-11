@@ -2,9 +2,14 @@ using Dikamon.ViewModels;
 
 namespace Dikamon.Pages;
 
+[QueryProperty(nameof(CategoryName), "categoryName")]
+[QueryProperty(nameof(CategoryId), "categoryId")]
 public partial class CategoryItemsPage : ContentPage
 {
     private readonly CategoryItemsViewModel _viewModel;
+
+    public string CategoryName { get; set; }
+    public string CategoryId { get; set; }
 
     public CategoryItemsPage(CategoryItemsViewModel viewModel)
     {
@@ -17,23 +22,28 @@ public partial class CategoryItemsPage : ContentPage
     {
         base.OnAppearing();
 
-        // Make sure we have the route parameters
-        var navigationParameter = GetNavigationParameter(Shell.Current.CurrentState);
-        if (navigationParameter != null &&
-            navigationParameter.ContainsKey("categoryName") &&
-            navigationParameter.ContainsKey("categoryId"))
+        try
         {
-            string categoryName = navigationParameter["categoryName"].ToString();
-            int categoryId = Convert.ToInt32(navigationParameter["categoryId"]);
-
-            await _viewModel.Initialize(categoryName, categoryId);
+            if (!string.IsNullOrEmpty(CategoryName) && !string.IsNullOrEmpty(CategoryId))
+            {
+                if (int.TryParse(CategoryId, out int categoryIdInt))
+                {
+                    await _viewModel.Initialize(CategoryName, categoryIdInt);
+                }
+                else
+                {
+                    await DisplayAlert("Hiba", "Érvénytelen kategória azonosító", "OK");
+                }
+            }
+            else
+            {
+                await DisplayAlert("Hiba", "Hiányzó kategória információk", "OK");
+            }
         }
-    }
-
-    private IDictionary<string, object> GetNavigationParameter(ShellNavigationState state)
-    {
-        // Implement the logic to extract navigation parameters from the state
-        // This is a placeholder implementation and should be replaced with actual logic
-        return new Dictionary<string, object>();
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error in OnAppearing: {ex.Message}");
+            await DisplayAlert("Hiba", $"Hiba történt az oldal betöltésekor: {ex.Message}", "OK");
+        }
     }
 }

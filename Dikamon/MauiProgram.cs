@@ -25,6 +25,7 @@ namespace Dikamon
                     fonts.AddFont("Tiny5-Regular.ttf", "Tiny5");
                 });
 
+            // Register services and handlers
             builder.Services.AddTransient<CustomUserResponseHandler>();
             builder.Services.AddTransient<CustomAuthenticatedHttpClientHandler>(sp =>
             {
@@ -37,6 +38,7 @@ namespace Dikamon
             });
             builder.Services.AddSingleton<ITokenService, TokenService>();
 
+            // Register API clients
             builder.Services.AddRefitClient<IUserApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -50,6 +52,8 @@ namespace Dikamon
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
+            // Register other API clients...
             builder.Services.AddRefitClient<IIngredientsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -57,12 +61,13 @@ namespace Dikamon
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
-                    client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                        client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
             builder.Services.AddRefitClient<IItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -76,6 +81,7 @@ namespace Dikamon
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
             builder.Services.AddRefitClient<IItemTypesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -89,6 +95,7 @@ namespace Dikamon
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
             builder.Services.AddRefitClient<IRecipesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -102,6 +109,7 @@ namespace Dikamon
                 })
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+
             builder.Services.AddRefitClient<IStoredItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -116,7 +124,7 @@ namespace Dikamon
                 .AddHttpMessageHandler<CustomUserResponseHandler>()
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
 
-
+            // Register pages and view models
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddSingleton<MainViewModel>();
             builder.Services.AddSingleton<LoginPage>();
@@ -130,11 +138,14 @@ namespace Dikamon
             builder.Services.AddSingleton<CategoryItemsPage>();
             builder.Services.AddSingleton<CategoryItemsViewModel>();
 
-            Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
-            Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
-            Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
-            Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
-            Routing.RegisterRoute(nameof(CategoryItemsPage), typeof(CategoryItemsPage));
+            // Register converters
+            builder.Services.AddSingleton<QuantityToTextConverter>();
+
+            Routing.RegisterRoute(nameof(Pages.LoginPage), typeof(Pages.LoginPage));
+            Routing.RegisterRoute(nameof(Pages.RegisterPage), typeof(Pages.RegisterPage));
+            Routing.RegisterRoute(nameof(Pages.MyKitchenPage), typeof(Pages.MyKitchenPage));
+            Routing.RegisterRoute(nameof(Pages.AfterLoginMainPage), typeof(Pages.AfterLoginMainPage));
+            Routing.RegisterRoute(nameof(Pages.CategoryItemsPage), typeof(Pages.CategoryItemsPage));
 
 #if DEBUG
             builder.Logging.AddDebug();

@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dikamon.Api;
 using Dikamon.Models;
+using Dikamon.Pages;
 
 namespace Dikamon.ViewModels
 {
@@ -145,7 +146,59 @@ namespace Dikamon.ViewModels
         private async Task SelectCategory(string categoryName)
         {
             SelectedCategory = categoryName;
-            await Application.Current.MainPage.DisplayAlert("Kategória", $"A '{categoryName}' kategória részletek hamarosan elérhetőek lesznek", "OK");
+
+            // Find category ID based on category name
+            int categoryId = 0;
+
+            // Map Hungarian category names to their expected IDs
+            // This is a temporary solution - ideally, you would get these from the API
+            switch (categoryName)
+            {
+                case "Zöldségek":
+                    categoryId = 1;
+                    break;
+                case "Gyümölcsök":
+                    categoryId = 2;
+                    break;
+                case "Diófélék":
+                    categoryId = 3;
+                    break;
+                case "Tejtermékek":
+                    categoryId = 4;
+                    break;
+                default:
+                    // Try to find in FoodCategories if available
+                    var category = FoodCategories.FirstOrDefault(c => c.Name == categoryName);
+                    if (category != null)
+                    {
+                        categoryId = category.Id;
+                    }
+                    break;
+            }
+
+            if (categoryId > 0)
+            {
+                try
+                {
+                    // Create string-based parameters for navigation
+                    var navigationParameter = new Dictionary<string, object>
+                    {
+                        { "categoryName", categoryName },
+                        { "categoryId", categoryId.ToString() }  // Convert to string to avoid casting issues
+                    };
+
+                    await Shell.Current.GoToAsync(nameof(CategoryItemsPage), navigationParameter);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Navigation error: {ex.Message}");
+                    await Application.Current.MainPage.DisplayAlert("Hiba", $"Navigációs hiba: {ex.Message}", "OK");
+                }
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Hiba", $"Nem található kategória ID a '{categoryName}' kategóriához", "OK");
+            }
         }
 
         [RelayCommand]
