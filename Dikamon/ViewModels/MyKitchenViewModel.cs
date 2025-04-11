@@ -54,14 +54,25 @@ namespace Dikamon.ViewModels
             try
             {
                 var userJson = await SecureStorage.GetAsync("user");
+                System.Diagnostics.Debug.WriteLine($"LoadUserIdAsync - User JSON: {userJson}");
+
                 if (!string.IsNullOrEmpty(userJson))
                 {
                     var user = System.Text.Json.JsonSerializer.Deserialize<Models.Users>(userJson);
                     if (user != null && user.Id.HasValue)
                     {
                         _userId = user.Id.Value;
+                        System.Diagnostics.Debug.WriteLine($"User ID loaded: {_userId}");
                         await LoadStoredItemsAsync();
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("User or User.Id is null after deserialization");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("User JSON is null or empty in secure storage");
                 }
             }
             catch (Exception ex)
@@ -88,6 +99,11 @@ namespace Dikamon.ViewModels
                     {
                         FoodCategories.Add(category);
                     }
+                    System.Diagnostics.Debug.WriteLine($"Loaded {FoodCategories.Count} categories");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to load categories: {response.Error?.Content}");
                 }
             }
             catch (Exception ex)
@@ -111,6 +127,8 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
+                System.Diagnostics.Debug.WriteLine($"Loading stored items for user {_userId}");
+
                 var response = await _storedItemsApiCommand.GetStoredItems(_userId);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
@@ -120,6 +138,11 @@ namespace Dikamon.ViewModels
                     {
                         StoredItems.Add(item);
                     }
+                    System.Diagnostics.Debug.WriteLine($"Loaded {StoredItems.Count} stored items");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to load stored items: {response.Error?.Content}");
                 }
             }
             catch (Exception ex)
@@ -146,6 +169,7 @@ namespace Dikamon.ViewModels
         private async Task SelectCategory(string categoryName)
         {
             SelectedCategory = categoryName;
+            System.Diagnostics.Debug.WriteLine($"Selected category: {categoryName}");
 
             // Find category ID based on category name
             int categoryId = 0;
@@ -176,17 +200,20 @@ namespace Dikamon.ViewModels
                     break;
             }
 
+            System.Diagnostics.Debug.WriteLine($"Category ID for {categoryName}: {categoryId}");
+
             if (categoryId > 0)
             {
                 try
                 {
-                    // Create string-based parameters for navigation
+                    // Convert to strings because QueryProperty works with strings
                     var navigationParameter = new Dictionary<string, object>
                     {
                         { "categoryName", categoryName },
-                        { "categoryId", categoryId.ToString() }  // Convert to string to avoid casting issues
+                        { "categoryId", categoryId.ToString() } // Must be string for QueryProperty
                     };
 
+                    System.Diagnostics.Debug.WriteLine($"Navigating to CategoryItemsPage with parameters: categoryName={categoryName}, categoryId={categoryId}");
                     await Shell.Current.GoToAsync(nameof(CategoryItemsPage), navigationParameter);
                 }
                 catch (Exception ex)
@@ -197,6 +224,7 @@ namespace Dikamon.ViewModels
             }
             else
             {
+                System.Diagnostics.Debug.WriteLine($"No category ID found for {categoryName}");
                 await Application.Current.MainPage.DisplayAlert("Hiba", $"Nem található kategória ID a '{categoryName}' kategóriához", "OK");
             }
         }

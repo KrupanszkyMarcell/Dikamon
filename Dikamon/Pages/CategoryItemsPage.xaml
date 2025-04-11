@@ -4,8 +4,13 @@
              x:Class="Dikamon.Pages.CategoryItemsPage"
              xmlns:vm="clr-namespace:Dikamon.ViewModels"
              xmlns:model="clr-namespace:Dikamon.Models"
+             xmlns:services="clr-namespace:Dikamon.Services"
              x:DataType="vm:CategoryItemsViewModel"
              Title="{Binding CategoryName}">
+
+    <ContentPage.Resources>
+        <services:QuantityToTextConverter x:Key="QuantityConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
@@ -60,7 +65,7 @@
                 </Grid>
             </Frame>
 
-            <!-- Items List -->
+            <!-- Items List - Fixed to show direct binding -->
             <RefreshView Grid.Row="2"
                         IsRefreshing="{Binding IsRefreshing}" 
                         Command="{Binding RefreshCommand}">
@@ -71,7 +76,8 @@
                             <Frame Margin="0,5" 
                                   Padding="10" 
                                   CornerRadius="10" 
-                                  BackgroundColor="White">
+                                  BackgroundColor="White"
+                                  HasShadow="False">
                                 <Grid ColumnDefinitions="Auto,*,Auto" 
                                      RowDefinitions="Auto,Auto">
                                     <!-- Item Image -->
@@ -81,7 +87,8 @@
                                           Source="{Binding StoredItem.Image}" 
                                           WidthRequest="60" 
                                           HeightRequest="60"
-                                          Margin="0,0,10,0"/>
+                                          Margin="0,0,10,0"
+                                          Aspect="AspectFit"/>
 
                                     <!-- Item Name -->
                                     <Label Grid.Row="0" 
@@ -93,8 +100,8 @@
                                     <!-- Item Quantity with unit -->
                                     <Label Grid.Row="1" 
                                           Grid.Column="1"
-                                          FontSize="14" 
-                                          TextColor="Gray">
+                                          TextColor="Gray"
+                                          FontSize="14">
                                         <Label.Text>
                                             <MultiBinding StringFormat="{}{0} {1}">
                                                 <Binding Path="Quantity" />
@@ -143,6 +150,13 @@
                    CornerRadius="10"
                    Margin="0,10,0,0"
                    Command="{Binding AddItemCommand}"/>
+
+            <!-- Debug information to check data binding -->
+            <StackLayout Grid.Row="1" Grid.RowSpan="3" IsVisible="False">
+                <Label Text="{Binding CategoryName}" />
+                <Label Text="{Binding CategoryId}" />
+                <Label Text="{Binding CategoryItems.Count, StringFormat='Items count: {0}'}" />
+            </StackLayout>
         </Grid>
     </Grid>
 </ContentPage>

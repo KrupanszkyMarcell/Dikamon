@@ -40,6 +40,7 @@ namespace Dikamon.ViewModels
         private bool _isRefreshing;
 
         private int _userId;
+        private bool _isInitialized = false;
 
         public CategoryItemsViewModel(IItemsApiCommand itemsApiCommand,
                                     IStoredItemsApiCommand storedItemsApiCommand,
@@ -51,31 +52,80 @@ namespace Dikamon.ViewModels
 
             CategoryItems = new ObservableCollection<Stores>();
             AvailableItems = new ObservableCollection<Items>();
-
-            LoadUserIdAsync();
         }
 
         public async Task Initialize(string categoryName, int categoryId)
         {
+            if (_isInitialized && categoryName == CategoryName && categoryId == CategoryId)
+            {
+                System.Diagnostics.Debug.WriteLine($"Already initialized with the same category: {categoryName}, {categoryId}");
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Initializing CategoryItemsViewModel with category: {categoryName}, id: {categoryId}");
+
             CategoryName = categoryName;
             CategoryId = categoryId;
 
-            await LoadCategoryItemsAsync();
-            await LoadAvailableItemsAsync();
+            _isInitialized = false;
+
+            await LoadUserIdAsync();
+
+            if (_userId == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("Failed to load user ID, cannot proceed with initialization");
+                await Application.Current.MainPage.DisplayAlert("Figyelmeztetés", "A felhasználói adatok betöltése sikertelen. Kérjük, jelentkezzen be újra.", "OK");
+                return;
+            }
+
+            await Task.WhenAll(
+                LoadCategoryItemsAsync(),
+                LoadAvailableItemsAsync()
+            );
+
+            _isInitialized = true;
         }
 
-        private async void LoadUserIdAsync()
+        private async Task LoadUserIdAsync()
         {
             try
             {
+                // Try to get user directly from SecureStorage
                 var userJson = await SecureStorage.GetAsync("user");
+                System.Diagnostics.Debug.WriteLine($"User JSON from secure storage: {(userJson != null ? "Retrieved" : "Not found")}");
+
                 if (!string.IsNullOrEmpty(userJson))
                 {
-                    var user = System.Text.Json.JsonSerializer.Deserialize<Models.Users>(userJson);
-                    if (user != null && user.Id.HasValue)
+                    try
                     {
-                        _userId = user.Id.Value;
+                        var user = System.Text.Json.JsonSerializer.Deserialize<Models.Users>(userJson);
+                        if (user != null && user.Id.HasValue)
+                        {
+                            _userId = user.Id.Value;
+                            System.Diagnostics.Debug.WriteLine($"User ID loaded: {_userId}");
+                            return;
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("User or User.Id is null after deserialization");
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error deserializing user JSON: {ex.Message}");
+                    }
+                }
+
+                // Fallback: Try to get user ID from a different source if available
+                var userIdStr = await SecureStorage.GetAsync("userId");
+                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
+                {
+                    _userId = userId;
+                    System.Diagnostics.Debug.WriteLine($"User ID loaded from userId key: {_userId}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Failed to load user ID from any source");
                 }
             }
             catch (Exception ex)
@@ -87,22 +137,76 @@ namespace Dikamon.ViewModels
         [RelayCommand]
         private async Task LoadCategoryItemsAsync()
         {
-            if (IsLoading || _userId == 0 || CategoryId == 0)
+            if (IsLoading)
                 return;
+
+            if (_userId == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot load category items: User ID is 0");
+                return;
+            }
+
+            if (CategoryId == 0)
+            {
+                System.Diagnostics.Debug.WriteLine("Cannot load category items: Category ID is 0");
+                return;
+            }
 
             try
             {
                 IsLoading = true;
+                System.Diagnostics.Debug.WriteLine($"Loading stored items for user {_userId} and category {CategoryId}");
 
-                // Get stored items for this user and filter by category
+                // First try to get stored items filtered by category type
                 var response = await _storedItemsApiCommand.GetStoredItemsByTypeId(_userId, CategoryId);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     CategoryItems.Clear();
+                    System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} items");
                     foreach (var item in response.Content)
                     {
-                        CategoryItems.Add(item);
+                        // Make sure the StoredItem property is populated
+                        if (item.StoredItem == null && item.ItemId > 0)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to load item details");
+                            try
+                            {
+                                var itemsResponse = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
+                                if (itemsResponse.IsSuccessStatusCode && itemsResponse.Content != null)
+                                {
+                                    var matchingItem = itemsResponse.Content.FirstOrDefault(i => i.Id == item.ItemId);
+                                    if (matchingItem != null)
+                                    {
+                                        item.StoredItem = matchingItem;
+                                        System.Diagnostics.Debug.WriteLine($"Populated item details for ID {item.ItemId}");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Error loading item details: {ex.Message}");
+                            }
+                        }
+
+                        if (item.StoredItem != null)
+                        {
+                            CategoryItems.Add(item);
+                            System.Diagnostics.Debug.WriteLine($"Added item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}");
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Skipping item with ID {item.ItemId} because StoredItem is null");
+                        }
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"API call failed: {response.Error?.Content}");
+                    if (response.Error != null)
+                    {
+                        var errorContent = response.Error.Content;
+                        System.Diagnostics.Debug.WriteLine($"Error content: {errorContent}");
                     }
                 }
             }
@@ -127,6 +231,7 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
+                System.Diagnostics.Debug.WriteLine($"Loading available items for category {CategoryId}");
 
                 // Get all items for this category
                 var response = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
@@ -134,9 +239,20 @@ namespace Dikamon.ViewModels
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     AvailableItems.Clear();
+                    System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} available items");
                     foreach (var item in response.Content)
                     {
                         AvailableItems.Add(item);
+                        System.Diagnostics.Debug.WriteLine($"Added available item: {item.Name}");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"API call failed: {response.Error?.Content}");
+                    if (response.Error != null)
+                    {
+                        var errorContent = response.Error.Content;
+                        System.Diagnostics.Debug.WriteLine($"Error content: {errorContent}");
                     }
                 }
             }
@@ -154,8 +270,11 @@ namespace Dikamon.ViewModels
         private async Task Refresh()
         {
             IsRefreshing = true;
-            await LoadCategoryItemsAsync();
-            await LoadAvailableItemsAsync();
+            await LoadUserIdAsync();
+            await Task.WhenAll(
+                LoadCategoryItemsAsync(),
+                LoadAvailableItemsAsync()
+            );
         }
 
         [RelayCommand]
@@ -179,8 +298,15 @@ namespace Dikamon.ViewModels
                     CategoryItems.Clear();
                     foreach (var item in response.Content)
                     {
-                        CategoryItems.Add(item);
+                        if (item.StoredItem != null)
+                        {
+                            CategoryItems.Add(item);
+                        }
                     }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Search API call failed: {response.Error?.Content}");
                 }
             }
             catch (Exception ex)

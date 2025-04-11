@@ -20,6 +20,7 @@ namespace Dikamon.ViewModels
         private readonly IUserApiCommand _userApiCommand;
         private const string UserStorageKey = "user";
         private const string TokenStorageKey = "token";
+        private const string UserIdKey = "userId";
 
         [ObservableProperty]
         public Users user = new Users();
@@ -34,22 +35,46 @@ namespace Dikamon.ViewModels
         {
             try
             {
-                var response = await _userApiCommand.LoginUser(user);
-                if (response.IsSuccessStatusCode)
+                System.Diagnostics.Debug.WriteLine($"Login attempt for user: {User.Email}");
+
+                var response = await _userApiCommand.LoginUser(User);
+                if (response.IsSuccessStatusCode && response.Content != null)
                 {
-                    await SecureStorage.SetAsync(UserStorageKey, JsonSerializer.Serialize(response.Content));
-                    await SecureStorage.SetAsync(TokenStorageKey, JsonSerializer.Serialize(response.Content.Token));
+                    System.Diagnostics.Debug.WriteLine($"Login successful for user: {User.Email}, ID: {response.Content.Id}");
+
+                    // Save the entire user object
+                    var userJson = JsonSerializer.Serialize(response.Content);
+                    await SecureStorage.SetAsync(UserStorageKey, userJson);
+                    System.Diagnostics.Debug.WriteLine($"User JSON saved: {userJson}");
+
+                    // Also save the ID separately for easier access
+                    if (response.Content.Id.HasValue)
+                    {
+                        await SecureStorage.SetAsync(UserIdKey, response.Content.Id.Value.ToString());
+                        System.Diagnostics.Debug.WriteLine($"User ID saved separately: {response.Content.Id.Value}");
+                    }
+
+                    // Save the token as a plain string
+                    await SecureStorage.SetAsync(TokenStorageKey, response.Content.Token);
+                    System.Diagnostics.Debug.WriteLine($"Token saved, length: {response.Content.Token?.Length ?? 0}");
+
+                    // Save email and password for potential token refresh
+                    await SecureStorage.SetAsync("userEmail", User.Email);
+                    await SecureStorage.SetAsync("userPassword", User.Password);
+
                     await Application.Current.MainPage.DisplayAlert("Login", "Login successful", "OK");
                     await Shell.Current.GoToAsync($"{nameof(AfterLoginMainPage)}", true);
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine($"Login failed for user: {User.Email}");
                     var errorResponse = await response.Error.GetContentAsAsync<ErrorMessage>();
                     await Application.Current.MainPage.DisplayAlert("Login", $"Login failed: {errorResponse.hu}", "OK");
                 }
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
             }
         }

@@ -11,11 +11,11 @@ public partial class CategoryItemsPage : ContentPage
     public string CategoryName { get; set; }
     public string CategoryId { get; set; }
 
-    public CategoryItemsPage(CategoryItemsViewModel viewModel)
+    public CategoryItemsPage(CategoryItemsViewModel vm)
     {
         InitializeComponent();
-        _viewModel = viewModel;
-        BindingContext = viewModel;
+        _viewModel = vm;
+        this.BindingContext = vm;
     }
 
     protected override async void OnAppearing()
@@ -24,26 +24,31 @@ public partial class CategoryItemsPage : ContentPage
 
         try
         {
+            System.Diagnostics.Debug.WriteLine($"CategoryItemsPage.OnAppearing - CategoryName: {CategoryName}, CategoryId: {CategoryId}");
+
             if (!string.IsNullOrEmpty(CategoryName) && !string.IsNullOrEmpty(CategoryId))
             {
                 if (int.TryParse(CategoryId, out int categoryIdInt))
                 {
+                    System.Diagnostics.Debug.WriteLine($"Calling Initialize with CategoryName: {CategoryName}, CategoryId: {categoryIdInt}");
                     await _viewModel.Initialize(CategoryName, categoryIdInt);
                 }
                 else
                 {
-                    await DisplayAlert("Hiba", "Érvénytelen kategória azonosító", "OK");
+                    System.Diagnostics.Debug.WriteLine($"Failed to parse category ID: {CategoryId}");
+                    await DisplayAlert("Error", $"Invalid category ID format: {CategoryId}", "OK");
                 }
             }
             else
             {
-                await DisplayAlert("Hiba", "Hiányzó kategória információk", "OK");
+                System.Diagnostics.Debug.WriteLine("CategoryName or CategoryId is null or empty");
+                await DisplayAlert("Error", "Category information is missing", "OK");
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error in OnAppearing: {ex.Message}");
-            await DisplayAlert("Hiba", $"Hiba történt az oldal betöltésekor: {ex.Message}", "OK");
+            System.Diagnostics.Debug.WriteLine($"Exception in OnAppearing: {ex.Message}");
+            await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
         }
     }
 }

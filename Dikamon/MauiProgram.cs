@@ -38,11 +38,14 @@ namespace Dikamon
             });
             builder.Services.AddSingleton<ITokenService, TokenService>();
 
+            // Configure HTTP Client
+            var apiBaseUrl = "https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api";
+
             // Register API clients
             builder.Services.AddRefitClient<IUserApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
@@ -50,102 +53,91 @@ namespace Dikamon
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
                 })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                .AddHttpMessageHandler<CustomUserResponseHandler>();
 
-            // Register other API clients...
             builder.Services.AddRefitClient<IIngredientsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                });
 
             builder.Services.AddRefitClient<IItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                });
 
             builder.Services.AddRefitClient<IItemTypesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                });
 
             builder.Services.AddRefitClient<IRecipesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                });
 
             builder.Services.AddRefitClient<IStoredItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
-                    client.BaseAddress = new Uri("https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api");
+                    client.BaseAddress = new Uri(apiBaseUrl);
                     var token = await SecureStorage.GetAsync("token");
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                })
-                .AddHttpMessageHandler<CustomUserResponseHandler>()
-                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>();
+                });
 
             // Register pages and view models
-            builder.Services.AddSingleton<MainPage>();
-            builder.Services.AddSingleton<MainViewModel>();
-            builder.Services.AddSingleton<LoginPage>();
-            builder.Services.AddSingleton<LoginViewModel>();
-            builder.Services.AddSingleton<RegisterPage>();
-            builder.Services.AddSingleton<RegisterViewModel>();
-            builder.Services.AddSingleton<MyKitchenPage>();
-            builder.Services.AddSingleton<MyKitchenViewModel>();
-            builder.Services.AddSingleton<AfterLoginMainPage>();
-            builder.Services.AddSingleton<AfterLoginMainViewModel>();
-            builder.Services.AddSingleton<CategoryItemsPage>();
-            builder.Services.AddSingleton<CategoryItemsViewModel>();
+            builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<LoginViewModel>();
+            builder.Services.AddTransient<RegisterPage>();
+            builder.Services.AddTransient<RegisterViewModel>();
+            builder.Services.AddTransient<MyKitchenPage>();
+            builder.Services.AddTransient<MyKitchenViewModel>();
+            builder.Services.AddTransient<AfterLoginMainPage>();
+            builder.Services.AddTransient<AfterLoginMainViewModel>();
+            builder.Services.AddTransient<CategoryItemsPage>();
+            builder.Services.AddTransient<CategoryItemsViewModel>();
 
             // Register converters
             builder.Services.AddSingleton<QuantityToTextConverter>();
 
-            Routing.RegisterRoute(nameof(Pages.LoginPage), typeof(Pages.LoginPage));
-            Routing.RegisterRoute(nameof(Pages.RegisterPage), typeof(Pages.RegisterPage));
-            Routing.RegisterRoute(nameof(Pages.MyKitchenPage), typeof(Pages.MyKitchenPage));
-            Routing.RegisterRoute(nameof(Pages.AfterLoginMainPage), typeof(Pages.AfterLoginMainPage));
-            Routing.RegisterRoute(nameof(Pages.CategoryItemsPage), typeof(Pages.CategoryItemsPage));
+            // Register routes
+            Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
+            Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
+            Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
+            Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
+            Routing.RegisterRoute(nameof(CategoryItemsPage), typeof(CategoryItemsPage));
 
 #if DEBUG
             builder.Logging.AddDebug();
