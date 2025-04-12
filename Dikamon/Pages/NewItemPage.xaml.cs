@@ -1,4 +1,5 @@
 using Dikamon.ViewModels;
+using System.Diagnostics;
 
 namespace Dikamon.Pages
 {
@@ -24,31 +25,35 @@ namespace Dikamon.Pages
 
             try
             {
-                System.Diagnostics.Debug.WriteLine($"NewItemPage.OnAppearing - CategoryName: {CategoryName}, CategoryId: {CategoryId}");
+                Debug.WriteLine($"NewItemPage.OnAppearing - CategoryName: {CategoryName}, CategoryId: {CategoryId}");
 
                 if (!string.IsNullOrEmpty(CategoryId))
                 {
                     if (int.TryParse(CategoryId, out int categoryIdInt))
                     {
-                        System.Diagnostics.Debug.WriteLine($"Initializing NewItemViewModel with CategoryId: {categoryIdInt}");
-                        await _viewModel.Initialize(categoryIdInt, CategoryName);
+                        Debug.WriteLine($"Initializing NewItemViewModel with CategoryId: {categoryIdInt}");
+                        await _viewModel.Initialize(categoryIdInt, CategoryName ?? "Unknown Category");
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine($"Failed to parse category ID: {CategoryId}");
-                        await DisplayAlert("Error", $"Invalid category ID format: {CategoryId}", "OK");
+                        Debug.WriteLine($"Failed to parse category ID: {CategoryId}");
+                        await DisplayAlert("Hiba", $"Érvénytelen kategória azonosító: {CategoryId}", "OK");
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("CategoryId is null or empty");
-                    await DisplayAlert("Error", "Category information is missing", "OK");
+                    Debug.WriteLine("CategoryId is null or empty");
+
+                    // If no category ID is provided, we can either:
+                    // 1. Show all categories in the picker (which we already do)
+                    // 2. Or return to the previous page
+                    await _viewModel.Initialize(0, "Összes kategória");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Exception in OnAppearing: {ex.Message}");
-                await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+                Debug.WriteLine($"Exception in OnAppearing: {ex.Message}");
+                await DisplayAlert("Hiba", $"Hiba történt: {ex.Message}", "OK");
             }
         }
     }
