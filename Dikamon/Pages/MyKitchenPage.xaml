@@ -3,8 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Dikamon.Pages.MyKitchenPage"
              xmlns:vm="clr-namespace:Dikamon.ViewModels"
+             xmlns:services="clr-namespace:Dikamon.Services"
              x:DataType="vm:MyKitchenViewModel"
              Title="Konyhám">
+
+    <ContentPage.Resources>
+        <services:ImageSourceConverter x:Key="ImageSourceConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
@@ -42,118 +47,44 @@
                       Margin="0,0,0,15"/>
             </Grid>
 
-            <!-- Food Category Cards -->
-            <ScrollView Grid.Row="1">
-                <Grid RowDefinitions="*,*" 
-                     ColumnDefinitions="*,*"
-                     RowSpacing="15"
-                     ColumnSpacing="15">
-
-                    <!-- Vegetables Card -->
-                    <Frame Grid.Row="0" Grid.Column="0"
-                          BackgroundColor="Transparent"
-                          Padding="0"
-                          HasShadow="False"
-                          BorderColor="Transparent"
-                          CornerRadius="15">
-                        <Grid RowDefinitions="*,Auto">
-                            <Image Grid.Row="0"
-                                  Source="vegetables.jpg"
-                                  Aspect="AspectFill"/>
-                            <Label Grid.Row="1"
-                                  Text="Zöldségek"
-                                  FontFamily="Tiny5"
-                                  FontSize="18"
-                                  TextColor="White"
-                                  BackgroundColor="#26283b"
-                                  HorizontalTextAlignment="Center"
-                                  Padding="5"/>
-                        </Grid>
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" 
-                                                 CommandParameter="Zöldségek"/>
-                        </Frame.GestureRecognizers>
-                    </Frame>
-
-                    <!-- Fruits Card -->
-                    <Frame Grid.Row="0" Grid.Column="1"
-                          BackgroundColor="Transparent"
-                          Padding="0"
-                          HasShadow="False"
-                          BorderColor="Transparent"
-                          CornerRadius="15">
-                        <Grid RowDefinitions="*,Auto">
-                            <Image Grid.Row="0"
-                                  Source="fruits.jpg"
-                                  Aspect="AspectFill"/>
-                            <Label Grid.Row="1"
-                                  Text="Gyümölcsök"
-                                  FontFamily="Tiny5"
-                                  FontSize="18"
-                                  TextColor="White"
-                                  BackgroundColor="#26283b"
-                                  HorizontalTextAlignment="Center"
-                                  Padding="5"/>
-                        </Grid>
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" 
-                                                 CommandParameter="Gyümölcsök"/>
-                        </Frame.GestureRecognizers>
-                    </Frame>
-
-                    <!-- Nuts Card -->
-                    <Frame Grid.Row="1" Grid.Column="0"
-                          BackgroundColor="Transparent"
-                          Padding="0"
-                          HasShadow="False"
-                          BorderColor="Transparent"
-                          CornerRadius="15">
-                        <Grid RowDefinitions="*,Auto">
-                            <Image Grid.Row="0"
-                                  Source="nuts.jpg"
-                                  Aspect="AspectFill"/>
-                            <Label Grid.Row="1"
-                                  Text="Diófélék"
-                                  FontFamily="Tiny5"
-                                  FontSize="18"
-                                  TextColor="White"
-                                  BackgroundColor="#26283b"
-                                  HorizontalTextAlignment="Center"
-                                  Padding="5"/>
-                        </Grid>
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" 
-                                                 CommandParameter="Diófélék"/>
-                        </Frame.GestureRecognizers>
-                    </Frame>
-
-                    <!-- Dairy Products Card -->
-                    <Frame Grid.Row="1" Grid.Column="1"
-                          BackgroundColor="Transparent"
-                          Padding="0"
-                          HasShadow="False"
-                          BorderColor="Transparent"
-                          CornerRadius="15">
-                        <Grid RowDefinitions="*,Auto">
-                            <Image Grid.Row="0"
-                                  Source="dairy.jpg"
-                                  Aspect="AspectFill"/>
-                            <Label Grid.Row="1"
-                                  Text="Tejtermékek"
-                                  FontFamily="Tiny5"
-                                  FontSize="18"
-                                  TextColor="White"
-                                  BackgroundColor="#26283b"
-                                  HorizontalTextAlignment="Center"
-                                  Padding="5"/>
-                        </Grid>
-                        <Frame.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SelectCategoryCommand}" 
-                                                 CommandParameter="Tejtermékek"/>
-                        </Frame.GestureRecognizers>
-                    </Frame>
-                </Grid>
-            </ScrollView>
+            <!-- Food Category Cards - Now using CollectionView for dynamic categories -->
+            <RefreshView Grid.Row="1"
+                        IsRefreshing="{Binding IsRefreshing}"
+                        Command="{Binding RefreshCommand}">
+                <CollectionView ItemsSource="{Binding FoodCategories}"
+                              ItemsLayout="VerticalGrid, 2"
+                              EmptyView="Kategóriák betöltése...">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FoodCategoryViewModel">
+                            <Frame BackgroundColor="Transparent"
+                                  Padding="0"
+                                  Margin="5,5,5,15"
+                                  HasShadow="False"
+                                  BorderColor="Transparent"
+                                  CornerRadius="15">
+                                <Grid RowDefinitions="*,Auto">
+                                    <Image Grid.Row="0"
+                                          Source="{Binding ImageUrl, Converter={StaticResource ImageSourceConverter}}"
+                                          Aspect="AspectFill"
+                                          HeightRequest="120"/>
+                                    <Label Grid.Row="1"
+                                          Text="{Binding Name}"
+                                          FontFamily="Tiny5"
+                                          FontSize="18"
+                                          TextColor="White"
+                                          BackgroundColor="#26283b"
+                                          HorizontalTextAlignment="Center"
+                                          Padding="5"/>
+                                </Grid>
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MyKitchenViewModel}}, Path=SelectCategoryCommand}" 
+                                                         CommandParameter="{Binding .}"/>
+                                </Frame.GestureRecognizers>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
         </Grid>
     </Grid>
 </ContentPage>
