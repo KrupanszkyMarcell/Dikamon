@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dikamon.Api;
@@ -14,10 +15,10 @@ namespace Dikamon.ViewModels
         private readonly IStoredItemsApiCommand _storedItemsApiCommand;
 
         [ObservableProperty]
-        private ObservableCollection<ItemTypes> _itemTypes;
+        private ObservableCollection<ItemTypes> _itemTypes = new();
 
         [ObservableProperty]
-        private ObservableCollection<Items> _availableItems;
+        private ObservableCollection<Items> _availableItems = new();
 
         [ObservableProperty]
         private ItemTypes _selectedItemType;
@@ -29,7 +30,7 @@ namespace Dikamon.ViewModels
         private string _selectedItemImageSource;
 
         [ObservableProperty]
-        private string _itemUnit;
+        private string _itemUnit = "db";
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanDecrement))]
@@ -54,6 +55,7 @@ namespace Dikamon.ViewModels
         private bool _refreshRequired;
 
         private int _userId;
+        private bool _isInitialized = false;
 
         public bool CanDecrement => Quantity > 1;
 
@@ -66,6 +68,7 @@ namespace Dikamon.ViewModels
             _itemTypesApiCommand = itemTypesApiCommand;
             _storedItemsApiCommand = storedItemsApiCommand;
 
+            // Make sure collections are initialized
             ItemTypes = new ObservableCollection<ItemTypes>();
             AvailableItems = new ObservableCollection<Items>();
 
@@ -77,7 +80,7 @@ namespace Dikamon.ViewModels
             try
             {
                 var userJson = await SecureStorage.GetAsync("user");
-                System.Diagnostics.Debug.WriteLine($"User JSON from secure storage: {(userJson != null ? "Retrieved" : "Not found")}");
+                Debug.WriteLine($"User JSON from secure storage: {(userJson != null ? "Retrieved" : "Not found")}");
 
                 if (!string.IsNullOrEmpty(userJson))
                 {
@@ -85,11 +88,11 @@ namespace Dikamon.ViewModels
                     if (user != null && user.Id.HasValue)
                     {
                         _userId = user.Id.Value;
-                        System.Diagnostics.Debug.WriteLine($"User ID loaded: {_userId}");
+                        Debug.WriteLine($"User ID loaded: {_userId}");
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("User or User.Id is null after deserialization");
+                        Debug.WriteLine("User or User.Id is null after deserialization");
                     }
                 }
                 else
@@ -99,39 +102,60 @@ namespace Dikamon.ViewModels
                     if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
                     {
                         _userId = userId;
-                        System.Diagnostics.Debug.WriteLine($"User ID loaded from userId key: {_userId}");
+                        Debug.WriteLine($"User ID loaded from userId key: {_userId}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading user ID: {ex.Message}");
+                Debug.WriteLine($"Error loading user ID: {ex.Message}");
             }
         }
 
         public async Task Initialize(int categoryId, string categoryName)
         {
+            if (_isInitialized && categoryId == CategoryId)
+            {
+                Debug.WriteLine($"NewItemViewModel already initialized with category ID: {categoryId}");
+                return;
+            }
+
             CategoryId = categoryId;
             CategoryName = categoryName;
+            _isInitialized = false;
 
             IsLoading = true;
+            Debug.WriteLine($"Initializing NewItemViewModel with category ID: {categoryId}, name: {categoryName}");
 
             try
             {
-                await Task.WhenAll(
-                    LoadItemTypesAsync(),
-                    LoadItemsByCategoryAsync(categoryId)
-                );
+                // Load all item types first
+                await LoadItemTypesAsync();
 
-                // Pre-select the category if it was provided
+                // Then load items for the specific category
                 if (categoryId > 0)
                 {
+                    await LoadItemsByCategoryAsync(categoryId);
+
+                    // Pre-select the category if it was provided
                     var matchingType = ItemTypes.FirstOrDefault(t => t.Id == categoryId);
                     if (matchingType != null)
                     {
+                        Debug.WriteLine($"Pre-selecting category: {matchingType.Name}");
                         SelectedItemType = matchingType;
                     }
+                    else
+                    {
+                        Debug.WriteLine($"No matching category found for ID: {categoryId}");
+                    }
                 }
+
+                _isInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in Initialize: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült betölteni a kategóriákat és termékeket", "OK");
             }
             finally
             {
@@ -143,10 +167,12 @@ namespace Dikamon.ViewModels
         {
             if (value != null)
             {
+                Debug.WriteLine($"Selected item type changed to: {value.Name}, ID: {value.Id}");
                 LoadItemsByCategoryAsync(value.Id);
             }
             else
             {
+                Debug.WriteLine("Selected item type changed to null");
                 AvailableItems.Clear();
             }
 
@@ -161,6 +187,8 @@ namespace Dikamon.ViewModels
 
             if (value != null)
             {
+                Debug.WriteLine($"Selected item changed to: {value.Name}, ID: {value.Id}");
+
                 // Set the image source
                 SelectedItemImageSource = !string.IsNullOrEmpty(value.Image)
                     ? value.Image
@@ -170,11 +198,14 @@ namespace Dikamon.ViewModels
                 ItemUnit = !string.IsNullOrEmpty(value.Unit)
                     ? value.Unit
                     : "db";
+
+                Debug.WriteLine($"Set item unit to: {ItemUnit}");
             }
             else
             {
+                Debug.WriteLine("Selected item changed to null");
                 SelectedItemImageSource = null;
-                ItemUnit = null;
+                ItemUnit = "db"; // Default unit
             }
         }
 
@@ -182,6 +213,7 @@ namespace Dikamon.ViewModels
         {
             try
             {
+                Debug.WriteLine("Loading item types...");
                 var response = await _itemTypesApiCommand.GetItemTypes();
 
                 if (response.IsSuccessStatusCode && response.Content != null)
@@ -190,17 +222,19 @@ namespace Dikamon.ViewModels
                     foreach (var type in response.Content)
                     {
                         ItemTypes.Add(type);
+                        Debug.WriteLine($"Added item type: {type.Name}, ID: {type.Id}");
                     }
-                    System.Diagnostics.Debug.WriteLine($"Loaded {ItemTypes.Count} item types");
+                    Debug.WriteLine($"Loaded {ItemTypes.Count} item types");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to load item types: {response.Error?.Content}");
+                    Debug.WriteLine($"Failed to load item types: {response.Error?.Content}");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading item types: {ex.Message}");
+                Debug.WriteLine($"Error loading item types: {ex.Message}");
+                // Don't rethrow - we want to continue even if this fails
             }
         }
 
@@ -208,6 +242,7 @@ namespace Dikamon.ViewModels
         {
             try
             {
+                Debug.WriteLine($"Loading items for category ID: {categoryId}");
                 var response = await _itemsApiCommand.GetItemsByTypeId(categoryId);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
@@ -216,19 +251,20 @@ namespace Dikamon.ViewModels
                     foreach (var item in response.Content)
                     {
                         AvailableItems.Add(item);
+                        Debug.WriteLine($"Added item: {item.Name}, ID: {item.Id}, Unit: {item.Unit}");
                     }
                     IsItemSelectionEnabled = true;
-                    System.Diagnostics.Debug.WriteLine($"Loaded {AvailableItems.Count} items for category {categoryId}");
+                    Debug.WriteLine($"Loaded {AvailableItems.Count} items for category {categoryId}");
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to load items: {response.Error?.Content}");
+                    Debug.WriteLine($"Failed to load items: {response.Error?.Content}");
                     IsItemSelectionEnabled = false;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading items: {ex.Message}");
+                Debug.WriteLine($"Error loading items: {ex.Message}");
                 IsItemSelectionEnabled = false;
             }
         }
@@ -237,6 +273,7 @@ namespace Dikamon.ViewModels
         private void IncrementQuantity()
         {
             Quantity++;
+            Debug.WriteLine($"Incremented quantity to: {Quantity}");
         }
 
         [RelayCommand]
@@ -245,6 +282,7 @@ namespace Dikamon.ViewModels
             if (Quantity > 1)
             {
                 Quantity--;
+                Debug.WriteLine($"Decremented quantity to: {Quantity}");
             }
         }
 
@@ -253,55 +291,76 @@ namespace Dikamon.ViewModels
         {
             if (SelectedItem == null)
             {
-                await Application.Current?.MainPage?.DisplayAlert("Hiba", "Kérjük, válasszon élelmiszert", "OK");
+                await Application.Current.MainPage.DisplayAlert("Hiba", "Kérjük, válasszon élelmiszert", "OK");
                 return;
             }
 
             if (_userId == 0)
             {
-                System.Diagnostics.Debug.WriteLine("User ID is 0 or not set - attempting to reload user ID");
-                await ReloadUserIdAsync();
-
-                if (_userId == 0)
-                {
-                    await Application.Current?.MainPage?.DisplayAlert("Hiba", "A felhasználói azonosító hiányzik. Kérjük, jelentkezzen be újra.", "OK");
-                    return;
-                }
+                await Application.Current.MainPage.DisplayAlert("Hiba", "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.", "OK");
+                return;
             }
 
             try
             {
                 IsLoading = true;
-                System.Diagnostics.Debug.WriteLine($"Attempting to save item: {SelectedItem.Name} (ID: {SelectedItem.Id}) with quantity {Quantity} for user {_userId}");
+                Debug.WriteLine($"Saving item: {SelectedItem.Name}, Quantity: {Quantity}, User ID: {_userId}");
 
-                // First create a new stored item - don't check if it exists, as the API will handle this
-                var newStoredItem = new Stores
+                // Check if the item already exists in the user's storage
+                var storedItemsResponse = await _storedItemsApiCommand.GetStoredItems(_userId);
+
+                if (storedItemsResponse.IsSuccessStatusCode && storedItemsResponse.Content != null)
                 {
-                    UserId = _userId,
-                    ItemId = SelectedItem.Id,
-                    Quantity = Quantity,
-                    StoredItem = SelectedItem
-                };
+                    var existingStoredItem = storedItemsResponse.Content
+                        .FirstOrDefault(s => s.ItemId == SelectedItem.Id);
 
-                System.Diagnostics.Debug.WriteLine($"Created new stored item object: UserId={newStoredItem.UserId}, ItemId={newStoredItem.ItemId}, Quantity={newStoredItem.Quantity}");
+                    if (existingStoredItem != null)
+                    {
+                        // Update the existing item's quantity
+                        Debug.WriteLine($"Item already exists in storage, updating quantity from {existingStoredItem.Quantity} to {existingStoredItem.Quantity + Quantity}");
+                        existingStoredItem.Quantity += Quantity;
+                        var updateResponse = await _storedItemsApiCommand.AddStoredItem(existingStoredItem);
 
-                // Add the item directly - the API will handle updating if it already exists
-                var addResponse = await _storedItemsApiCommand.AddStoredItem(newStoredItem);
+                        if (updateResponse.IsSuccessStatusCode)
+                        {
+                            await Application.Current.MainPage.DisplayAlert(
+                            "Siker",
+                            $"A mennyiség frissítve: {SelectedItem.Name} - {existingStoredItem.Quantity} {SelectedItem.Unit ?? "db"}",
+                                "OK");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"API error when updating item: {updateResponse.Error?.Content}");
+                            throw new Exception("Failed to update item quantity");
+                        }
+                    }
+                    else
+                    {
+                        // Add new stored item
+                        Debug.WriteLine($"Adding new item to storage: {SelectedItem.Name}");
+                        var newStoredItem = new Stores
+                        {
+                            UserId = _userId,
+                            ItemId = SelectedItem.Id,
+                            Quantity = Quantity,
+                            StoredItem = SelectedItem
+                        };
 
-                if (addResponse == null)
-                {
-                    System.Diagnostics.Debug.WriteLine("API response is null - likely network or service issue");
-                    throw new Exception("API response is null");
-                }
+                        var addResponse = await _storedItemsApiCommand.AddStoredItem(newStoredItem);
 
-                if (addResponse.IsSuccessStatusCode && addResponse.Content != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Successfully added/updated item. Response: {System.Text.Json.JsonSerializer.Serialize(addResponse.Content)}");
-
-                    await Application.Current?.MainPage?.DisplayAlert(
-                        "Siker",
-                        $"Termék hozzáadva/frissítve: {SelectedItem.Name} - {Quantity} {SelectedItem.Unit ?? "db"}",
-                        "OK");
+                        if (addResponse.IsSuccessStatusCode)
+                        {
+                            await Application.Current.MainPage.DisplayAlert(
+                            "Siker",
+                            $"Termék hozzáadva: {SelectedItem.Name} - {Quantity} {SelectedItem.Unit ?? "db"}",
+                                "OK");
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"API error when adding item: {addResponse.Error?.Content}");
+                            throw new Exception("Failed to add new item");
+                        }
+                    }
 
                     // Refresh the category page after adding an item
                     var navigationParameter = new Dictionary<string, object>
@@ -314,62 +373,18 @@ namespace Dikamon.ViewModels
                 }
                 else
                 {
-                    var errorContent = addResponse.Error?.Content ?? "Unknown error";
-                    System.Diagnostics.Debug.WriteLine($"API call failed with status {addResponse.StatusCode}. Error: {errorContent}");
-                    throw new Exception($"Failed to add item: {errorContent}");
+                    Debug.WriteLine($"API error when getting stored items: {storedItemsResponse.Error?.Content}");
+                    throw new Exception("Failed to check existing items");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving item: {ex.Message}");
-                await Application.Current?.MainPage?.DisplayAlert("Hiba", $"Nem sikerült menteni a terméket: {ex.Message}", "OK");
+                Debug.WriteLine($"Error saving item: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült menteni a terméket", "OK");
             }
             finally
             {
                 IsLoading = false;
-            }
-        }
-
-        // Helper method to reload user ID
-        private async Task ReloadUserIdAsync()
-        {
-            try
-            {
-                // Try multiple sources to get the user ID
-                var userJson = await SecureStorage.GetAsync("user");
-                if (!string.IsNullOrEmpty(userJson))
-                {
-                    try
-                    {
-                        var user = System.Text.Json.JsonSerializer.Deserialize<Models.Users>(userJson);
-                        if (user != null && user.Id.HasValue)
-                        {
-                            _userId = user.Id.Value;
-                            System.Diagnostics.Debug.WriteLine($"Reloaded User ID from user JSON: {_userId}");
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Error deserializing user JSON: {ex.Message}");
-                    }
-                }
-
-                // Try to get user ID directly from stored string
-                var userIdStr = await SecureStorage.GetAsync("userId");
-                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
-                {
-                    _userId = userId;
-                    System.Diagnostics.Debug.WriteLine($"Reloaded User ID from userId key: {_userId}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("Failed to reload user ID from any source");
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error reloading user ID: {ex.Message}");
             }
         }
 
