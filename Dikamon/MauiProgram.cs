@@ -131,6 +131,10 @@ namespace Dikamon
             builder.Services.AddTransient<CategoryItemsPage>();
             builder.Services.AddTransient<CategoryItemsViewModel>();
 
+            // Register NewItemPage and NewItemViewModel
+            builder.Services.AddTransient<NewItemPage>();
+            builder.Services.AddTransient<NewItemViewModel>();
+
             // Register converters
             builder.Services.AddSingleton<QuantityToTextConverter>();
             builder.Services.AddSingleton<InvertedBoolConverter>();
@@ -142,6 +146,7 @@ namespace Dikamon
             Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
             Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
             Routing.RegisterRoute(nameof(CategoryItemsPage), typeof(CategoryItemsPage));
+            Routing.RegisterRoute(nameof(NewItemPage), typeof(NewItemPage));
 
 #if DEBUG
             builder.Logging.AddDebug();

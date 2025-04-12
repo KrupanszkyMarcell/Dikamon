@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Dikamon.Pages.NewItemPage"
+             xmlns:vm="clr-namespace:Dikamon.ViewModels"
+             x:DataType="vm:NewItemViewModel"
+             Title="Új termék hozzáadása">
+
+    <Grid RowDefinitions="Auto,*"
+          BackgroundColor="{StaticResource MainColor}"
+          Padding="20">
+
+        <!-- Header -->
+        <StackLayout Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    HorizontalOptions="Start"
+                    Spacing="10"
+                    Margin="0,10,0,20">
+            <Image Source="fridgebuddy_chef.png" 
+                  WidthRequest="40" 
+                  HeightRequest="40" />
+            <Label Text="DiKAMON" 
+                  FontFamily="Tiny5" 
+                  FontSize="24"
+                  VerticalOptions="Center" />
+        </StackLayout>
+
+        <!-- Main Form -->
+        <ScrollView Grid.Row="1">
+            <Grid RowDefinitions="Auto,Auto,*,Auto"
+                  Margin="0,0,0,20">
+
+                <!-- Title -->
+                <Label Grid.Row="0"
+                      Text="Vegeyél fel egy új DiKAMON-t a konyhádba!" 
+                      FontFamily="Tiny5" 
+                      FontSize="22" 
+                      HorizontalOptions="Center"
+                      HorizontalTextAlignment="Center"
+                      Margin="0,0,0,30"/>
+
+                <!-- Form Content -->
+                <Frame Grid.Row="1"
+                       BackgroundColor="White"
+                       CornerRadius="15"
+                       Padding="20"
+                       Margin="0,0,0,20">
+                    <StackLayout Spacing="15">
+                        <!-- Item Type Selection -->
+                        <StackLayout>
+                            <Label Text="Típus"
+                                   FontFamily="Tiny5"
+                                   FontSize="16"
+                                   Margin="0,0,0,5" />
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Picker Title="Válassz típust" 
+                                        ItemsSource="{Binding ItemTypes}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        SelectedItem="{Binding SelectedItemType}"
+                                        FontFamily="OpenSansRegular" />
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Item Selection -->
+                        <StackLayout>
+                            <Label Text="Élelmiszerek"
+                                   FontFamily="Tiny5"
+                                   FontSize="16"
+                                   Margin="0,0,0,5" />
+                            <Frame Padding="10" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Picker Title="Válassz élelmiszert" 
+                                        ItemsSource="{Binding AvailableItems}"
+                                        ItemDisplayBinding="{Binding Name}"
+                                        SelectedItem="{Binding SelectedItem}"
+                                        IsEnabled="{Binding IsItemSelectionEnabled}"
+                                        FontFamily="OpenSansRegular" />
+                            </Frame>
+                        </StackLayout>
+
+                        <!-- Quantity -->
+                        <StackLayout>
+                            <Label Text="Mennyiség"
+                                   FontFamily="Tiny5"
+                                   FontSize="16"
+                                   Margin="0,0,0,5" />
+                            <Frame Padding="5,0" 
+                                   CornerRadius="8" 
+                                   BorderColor="#DDDDDD"
+                                   HasShadow="False">
+                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                      HeightRequest="50">
+                                    <Button Grid.Column="0"
+                                            Text="-"
+                                            FontSize="20"
+                                            WidthRequest="40"
+                                            HeightRequest="40"
+                                            Padding="0"
+                                            CornerRadius="20"
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Center"
+                                            BackgroundColor="#FFEE58"
+                                            TextColor="Black"
+                                            Command="{Binding DecrementQuantityCommand}"
+                                            IsEnabled="{Binding CanDecrement}"/>
+
+                                    <Entry Grid.Column="1"
+                                           Text="{Binding Quantity}"
+                                           HorizontalTextAlignment="Center"
+                                           VerticalOptions="Center"
+                                           Keyboard="Numeric"
+                                           FontFamily="OpenSansRegular"/>
+
+                                    <Button Grid.Column="2"
+                                            Text="+"
+                                            FontSize="20"
+                                            WidthRequest="40"
+                                            HeightRequest="40"
+                                            Padding="0"
+                                            CornerRadius="20"
+                                            VerticalOptions="Center"
+                                            HorizontalOptions="Center"
+                                            BackgroundColor="#90CAF9"
+                                            TextColor="Black"
+                                            Command="{Binding IncrementQuantityCommand}"/>
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Item image - displayed when an item is selected -->
+                <StackLayout Grid.Row="2" 
+                            HorizontalOptions="Center"
+                            VerticalOptions="Start"
+                            IsVisible="{Binding IsItemSelected}">
+                    <Image Source="{Binding SelectedItemImageSource}"
+                           HeightRequest="150"
+                           WidthRequest="150"
+                           Aspect="AspectFit"
+                           Margin="0,10,0,0"/>
+
+                    <Label Text="{Binding ItemUnit, StringFormat='Mértékegység: {0}'}"
+                           FontFamily="Tiny5"
+                           FontSize="16"
+                           HorizontalOptions="Center"
+                           Margin="0,10,0,0"/>
+                </StackLayout>
+
+                <!-- Action Buttons -->
+                <Grid Grid.Row="3" 
+                     ColumnDefinitions="*,*"
+                     ColumnSpacing="15"
+                     Margin="0,10,0,0">
+
+                    <Button Grid.Column="0"
+                           Text="Mentés"
+                           FontFamily="Tiny5"
+                           BackgroundColor="#90CAF9"
+                           TextColor="Black"
+                           CornerRadius="8"
+                           HeightRequest="50"
+                           IsEnabled="{Binding IsItemSelected}"
+                           Command="{Binding SaveCommand}"/>
+
+                    <Button Grid.Column="1"
+                           Text="Mégse"
+                           FontFamily="Tiny5"
+                           BackgroundColor="#FFEE58"
+                           TextColor="Black"
+                           CornerRadius="8"
+                           HeightRequest="50"
+                           Command="{Binding CancelCommand}"/>
+                </Grid>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

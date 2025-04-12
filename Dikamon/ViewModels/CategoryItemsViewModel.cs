@@ -12,6 +12,7 @@ using Dikamon.Pages;
 
 namespace Dikamon.ViewModels
 {
+    [QueryProperty(nameof(RefreshRequired), "refresh")]
     public partial class CategoryItemsViewModel : ObservableObject
     {
         private readonly IItemsApiCommand _itemsApiCommand;
@@ -39,6 +40,9 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         private bool _isRefreshing;
 
+        [ObservableProperty]
+        private bool _refreshRequired = false;
+
         private int _userId;
         private bool _isInitialized = false;
 
@@ -52,6 +56,16 @@ namespace Dikamon.ViewModels
 
             CategoryItems = new ObservableCollection<Stores>();
             AvailableItems = new ObservableCollection<Items>();
+        }
+
+        partial void OnRefreshRequiredChanged(bool value)
+        {
+            if (value && _isInitialized)
+            {
+                // Refresh data when coming back from another page
+                System.Diagnostics.Debug.WriteLine("Refresh required detected, reloading data...");
+                LoadCategoryItemsAsync().ConfigureAwait(false);
+            }
         }
 
         public async Task Initialize(string categoryName, int categoryId)
@@ -436,77 +450,28 @@ namespace Dikamon.ViewModels
             }
         }
 
+        // Modified AddItem method to navigate to the new item page
         [RelayCommand]
         private async Task AddItem()
         {
             if (_userId == 0)
                 return;
 
-            // Show a selection dialog for available items
-            string[] itemNames = AvailableItems.Select(i => i.Name).ToArray();
-
-            if (itemNames.Length == 0)
-            {
-                await Application.Current.MainPage.DisplayAlert("Információ", "Nincsenek elérhető termékek ebben a kategóriában", "OK");
-                return;
-            }
-
-            string selectedItem = await Application.Current.MainPage.DisplayActionSheet("Válassz terméket", "Mégse", null, itemNames);
-
-            if (selectedItem == "Mégse" || string.IsNullOrEmpty(selectedItem))
-                return;
-
-            // Get the selected item
-            var item = AvailableItems.FirstOrDefault(i => i.Name == selectedItem);
-            if (item == null)
-                return;
-
-            // Ask for quantity
-            string result = await Application.Current.MainPage.DisplayPromptAsync("Mennyiség",
-                $"Add meg a {selectedItem} mennyiségét:",
-                initialValue: "1",
-                keyboard: Keyboard.Numeric);
-
-            if (string.IsNullOrEmpty(result) || !int.TryParse(result, out int quantity) || quantity <= 0)
-                return;
-
             try
             {
-                // Check if the item is already in the storage
-                var existingItem = CategoryItems.FirstOrDefault(s => s.ItemId == item.Id);
-
-                if (existingItem != null)
+                // Navigate to the NewItemPage with the category information
+                var navigationParameter = new Dictionary<string, object>
                 {
-                    // Update existing item quantity
-                    existingItem.Quantity += quantity;
-                    await _storedItemsApiCommand.AddStoredItem(existingItem);
-                }
-                else
-                {
-                    // Add new item to storage
-                    var newStoredItem = new Stores
-                    {
-                        UserId = _userId,
-                        ItemId = item.Id,
-                        Quantity = quantity,
-                        StoredItem = item
-                    };
+                    { "categoryId", CategoryId.ToString() },
+                    { "categoryName", CategoryName }
+                };
 
-                    var response = await _storedItemsApiCommand.AddStoredItem(newStoredItem);
-
-                    if (response.IsSuccessStatusCode && response.Content != null)
-                    {
-                        newStoredItem.Id = response.Content.Id;
-                        CategoryItems.Add(newStoredItem);
-                    }
-                }
-
-                await Application.Current.MainPage.DisplayAlert("Siker", $"{quantity} {selectedItem} hozzáadva a konyhádhoz", "OK");
+                await Shell.Current.GoToAsync(nameof(NewItemPage), navigationParameter);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error adding item: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült hozzáadni a terméket", "OK");
+                System.Diagnostics.Debug.WriteLine($"Error navigating to NewItemPage: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült megnyitni az új termék oldalt", "OK");
             }
         }
 
