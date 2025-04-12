@@ -10,7 +10,7 @@ namespace Dikamon.Api
 {
     public interface IStoredItemsApiCommand
     {
-        [Get("/storeditems/{userid}")]
+        [Get("/storage/{userid}")]
         Task<ApiResponse<List<Stores>>> GetStoredItems(int userid);
         [Get("/storage/{userid}/length")]
         Task<ApiResponse<int>> GetStoredItemsLength(int userid);

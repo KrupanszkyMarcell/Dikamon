@@ -7,21 +7,16 @@ using Dikamon.Models;
 
 namespace Dikamon.ViewModels
 {
+    [QueryProperty(nameof(CategoryId), "categoryId")]
+    [QueryProperty(nameof(CategoryName), "categoryName")]
     [QueryProperty(nameof(RefreshRequired), "refresh")]
     public partial class NewItemViewModel : ObservableObject
     {
         private readonly IItemsApiCommand _itemsApiCommand;
-        private readonly IItemTypesApiCommand _itemTypesApiCommand;
         private readonly IStoredItemsApiCommand _storedItemsApiCommand;
 
         [ObservableProperty]
-        private ObservableCollection<ItemTypes> _itemTypes = new();
-
-        [ObservableProperty]
         private ObservableCollection<Items> _availableItems = new();
-
-        [ObservableProperty]
-        private ItemTypes _selectedItemType;
 
         [ObservableProperty]
         private Items _selectedItem;
@@ -38,9 +33,6 @@ namespace Dikamon.ViewModels
 
         [ObservableProperty]
         private bool _isLoading;
-
-        [ObservableProperty]
-        private bool _isItemSelectionEnabled;
 
         [ObservableProperty]
         private bool _isItemSelected;
@@ -61,15 +53,12 @@ namespace Dikamon.ViewModels
 
         public NewItemViewModel(
             IItemsApiCommand itemsApiCommand,
-            IItemTypesApiCommand itemTypesApiCommand,
             IStoredItemsApiCommand storedItemsApiCommand)
         {
             _itemsApiCommand = itemsApiCommand;
-            _itemTypesApiCommand = itemTypesApiCommand;
             _storedItemsApiCommand = storedItemsApiCommand;
 
             // Make sure collections are initialized
-            ItemTypes = new ObservableCollection<ItemTypes>();
             AvailableItems = new ObservableCollection<Items>();
 
             LoadUserIdAsync();
@@ -112,73 +101,29 @@ namespace Dikamon.ViewModels
             }
         }
 
-        public async Task Initialize(int categoryId, string categoryName)
+        partial void OnCategoryIdChanged(int value)
         {
-            if (_isInitialized && categoryId == CategoryId)
+            Debug.WriteLine($"[TRACE] CategoryId property changed to: {value}");
+            if (value > 0)
             {
-                Debug.WriteLine($"NewItemViewModel already initialized with category ID: {categoryId}");
-                return;
-            }
-
-            CategoryId = categoryId;
-            CategoryName = categoryName;
-            _isInitialized = false;
-
-            IsLoading = true;
-            Debug.WriteLine($"Initializing NewItemViewModel with category ID: {categoryId}, name: {categoryName}");
-
-            try
-            {
-                // Load all item types first
-                await LoadItemTypesAsync();
-
-                // Then load items for the specific category
-                if (categoryId > 0)
-                {
-                    await LoadItemsByCategoryAsync(categoryId);
-
-                    // Pre-select the category if it was provided
-                    var matchingType = ItemTypes.FirstOrDefault(t => t.Id == categoryId);
-                    if (matchingType != null)
-                    {
-                        Debug.WriteLine($"Pre-selecting category: {matchingType.Name}");
-                        SelectedItemType = matchingType;
-                    }
-                    else
-                    {
-                        Debug.WriteLine($"No matching category found for ID: {categoryId}");
-                    }
-                }
-
-                _isInitialized = true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in Initialize: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült betölteni a kategóriákat és termékeket", "OK");
-            }
-            finally
-            {
-                IsLoading = false;
+                // Important: Load items for this category immediately when categoryId changes
+                LoadItemsByCategoryAsync(value).ConfigureAwait(false);
             }
         }
 
-        partial void OnSelectedItemTypeChanged(ItemTypes value)
+        // This handles the case when categoryId comes in as a string from navigation
+        public void InitializeWithCategoryInfo(string categoryIdStr)
         {
-            if (value != null)
+            Debug.WriteLine($"[TRACE] InitializeWithCategoryInfo called with: {categoryIdStr}");
+            if (!string.IsNullOrEmpty(categoryIdStr) && int.TryParse(categoryIdStr, out int categoryId))
             {
-                Debug.WriteLine($"Selected item type changed to: {value.Name}, ID: {value.Id}");
-                LoadItemsByCategoryAsync(value.Id);
+                Debug.WriteLine($"[TRACE] Parsed categoryId: {categoryId}, setting CategoryId property");
+                CategoryId = categoryId;
             }
             else
             {
-                Debug.WriteLine("Selected item type changed to null");
-                AvailableItems.Clear();
+                Debug.WriteLine($"[ERROR] Failed to parse category ID from string: {categoryIdStr}");
             }
-
-            // Reset the selected item when type changes
-            SelectedItem = null;
-            IsItemSelectionEnabled = (value != null);
         }
 
         partial void OnSelectedItemChanged(Items value)
@@ -209,40 +154,18 @@ namespace Dikamon.ViewModels
             }
         }
 
-        private async Task LoadItemTypesAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Loading item types...");
-                var response = await _itemTypesApiCommand.GetItemTypes();
-
-                if (response.IsSuccessStatusCode && response.Content != null)
-                {
-                    ItemTypes.Clear();
-                    foreach (var type in response.Content)
-                    {
-                        ItemTypes.Add(type);
-                        Debug.WriteLine($"Added item type: {type.Name}, ID: {type.Id}");
-                    }
-                    Debug.WriteLine($"Loaded {ItemTypes.Count} item types");
-                }
-                else
-                {
-                    Debug.WriteLine($"Failed to load item types: {response.Error?.Content}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error loading item types: {ex.Message}");
-                // Don't rethrow - we want to continue even if this fails
-            }
-        }
-
         private async Task LoadItemsByCategoryAsync(int categoryId)
         {
+            if (categoryId <= 0)
+            {
+                Debug.WriteLine($"[ERROR] Invalid category ID: {categoryId}, not loading items");
+                return;
+            }
+
             try
             {
-                Debug.WriteLine($"Loading items for category ID: {categoryId}");
+                IsLoading = true;
+                Debug.WriteLine($"[TRACE] Loading items for category ID: {categoryId}");
                 var response = await _itemsApiCommand.GetItemsByTypeId(categoryId);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
@@ -253,19 +176,34 @@ namespace Dikamon.ViewModels
                         AvailableItems.Add(item);
                         Debug.WriteLine($"Added item: {item.Name}, ID: {item.Id}, Unit: {item.Unit}");
                     }
-                    IsItemSelectionEnabled = true;
-                    Debug.WriteLine($"Loaded {AvailableItems.Count} items for category {categoryId}");
+                    Debug.WriteLine($"[SUCCESS] Loaded {AvailableItems.Count} items for category {categoryId}");
+
+                    if (AvailableItems.Count == 0)
+                    {
+                        Debug.WriteLine($"[WARNING] No items found for category {categoryId}");
+                        await Application.Current?.MainPage?.DisplayAlert("Figyelmeztetés", "Ebben a kategóriában nincsenek elérhető élelmiszerek.", "OK");
+                    }
+
+                    _isInitialized = true;
                 }
                 else
                 {
-                    Debug.WriteLine($"Failed to load items: {response.Error?.Content}");
-                    IsItemSelectionEnabled = false;
+                    Debug.WriteLine($"[ERROR] Failed to load items: {response.Error?.Content}");
+                    if (response.Error != null)
+                    {
+                        Debug.WriteLine($"Error details: {response.Error.Content}");
+                    }
+                    await Application.Current?.MainPage?.DisplayAlert("Hiba", "Nem sikerült betölteni az élelmiszereket", "OK");
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading items: {ex.Message}");
-                IsItemSelectionEnabled = false;
+                Debug.WriteLine($"[EXCEPTION] Error loading items: {ex.Message}");
+                await Application.Current?.MainPage?.DisplayAlert("Hiba", $"Hiba történt az élelmiszerek betöltése közben: {ex.Message}", "OK");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
@@ -291,20 +229,20 @@ namespace Dikamon.ViewModels
         {
             if (SelectedItem == null)
             {
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Kérjük, válasszon élelmiszert", "OK");
+                await Application.Current?.MainPage?.DisplayAlert("Hiba", "Kérjük, válasszon élelmiszert", "OK");
                 return;
             }
 
             if (_userId == 0)
             {
-                await Application.Current.MainPage.DisplayAlert("Hiba", "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.", "OK");
+                await Application.Current?.MainPage?.DisplayAlert("Hiba", "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.", "OK");
                 return;
             }
 
             try
             {
                 IsLoading = true;
-                Debug.WriteLine($"Saving item: {SelectedItem.Name}, Quantity: {Quantity}, User ID: {_userId}");
+                Debug.WriteLine($"Saving item: {SelectedItem.Name}, Quantity: {Quantity}, User ID: {_userId}, Item ID: {SelectedItem.Id}");
 
                 // Check if the item already exists in the user's storage
                 var storedItemsResponse = await _storedItemsApiCommand.GetStoredItems(_userId);
@@ -319,13 +257,14 @@ namespace Dikamon.ViewModels
                         // Update the existing item's quantity
                         Debug.WriteLine($"Item already exists in storage, updating quantity from {existingStoredItem.Quantity} to {existingStoredItem.Quantity + Quantity}");
                         existingStoredItem.Quantity += Quantity;
+
                         var updateResponse = await _storedItemsApiCommand.AddStoredItem(existingStoredItem);
 
                         if (updateResponse.IsSuccessStatusCode)
                         {
-                            await Application.Current.MainPage.DisplayAlert(
-                            "Siker",
-                            $"A mennyiség frissítve: {SelectedItem.Name} - {existingStoredItem.Quantity} {SelectedItem.Unit ?? "db"}",
+                            await Application.Current?.MainPage?.DisplayAlert(
+                                "Siker",
+                                $"A mennyiség frissítve: {SelectedItem.Name} - {existingStoredItem.Quantity} {ItemUnit}",
                                 "OK");
                         }
                         else
@@ -342,22 +281,28 @@ namespace Dikamon.ViewModels
                         {
                             UserId = _userId,
                             ItemId = SelectedItem.Id,
-                            Quantity = Quantity,
-                            StoredItem = SelectedItem
+                            Quantity = Quantity
                         };
+
+                        // Make sure TypeId is properly set
+                        Debug.WriteLine($"Using item with TypeId: {SelectedItem.TypeId}");
 
                         var addResponse = await _storedItemsApiCommand.AddStoredItem(newStoredItem);
 
                         if (addResponse.IsSuccessStatusCode)
                         {
-                            await Application.Current.MainPage.DisplayAlert(
-                            "Siker",
-                            $"Termék hozzáadva: {SelectedItem.Name} - {Quantity} {SelectedItem.Unit ?? "db"}",
+                            await Application.Current?.MainPage?.DisplayAlert(
+                                "Siker",
+                                $"Termék hozzáadva: {SelectedItem.Name} - {Quantity} {ItemUnit}",
                                 "OK");
                         }
                         else
                         {
                             Debug.WriteLine($"API error when adding item: {addResponse.Error?.Content}");
+                            if (addResponse.Error != null)
+                            {
+                                Debug.WriteLine($"Error content: {addResponse.Error.Content}");
+                            }
                             throw new Exception("Failed to add new item");
                         }
                     }
@@ -380,7 +325,7 @@ namespace Dikamon.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error saving item: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült menteni a terméket", "OK");
+                await Application.Current?.MainPage?.DisplayAlert("Hiba", $"Nem sikerült menteni a terméket: {ex.Message}", "OK");
             }
             finally
             {

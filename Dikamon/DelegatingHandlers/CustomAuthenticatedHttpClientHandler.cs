@@ -1,7 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Dikamon.DelegatingHandlers
@@ -19,41 +21,75 @@ namespace Dikamon.DelegatingHandlers
             _getToken = getToken;
             _refreshToken = refreshToken;
         }
+
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            await ApplyTokenToRequest(request);
-            var response = await base.SendAsync(request, cancellationToken);
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            try
             {
-                await _semaphore.WaitAsync(cancellationToken);
-                try
+                await ApplyTokenToRequest(request);
+                var response = await base.SendAsync(request, cancellationToken);
+
+                // Log all responses
+                Debug.WriteLine($"[HTTP] {request.Method} {request.RequestUri} -> {response.StatusCode}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
-                    bool refreshed = await _refreshToken();
-                    if (refreshed)
+                    Debug.WriteLine($"[AUTH] Unauthorized response for {request.RequestUri}");
+                    await _semaphore.WaitAsync(cancellationToken);
+                    try
                     {
-                        var newRequest = await CloneHttpRequestMessageAsync(request);
-                        await ApplyTokenToRequest(newRequest);
-                        var newResponse = await base.SendAsync(newRequest, cancellationToken);
-                        return newResponse;
+                        bool refreshed = await _refreshToken();
+                        Debug.WriteLine($"[AUTH] Token refresh result: {refreshed}");
+
+                        if (refreshed)
+                        {
+                            var newRequest = await CloneHttpRequestMessageAsync(request);
+                            await ApplyTokenToRequest(newRequest);
+                            var newResponse = await base.SendAsync(newRequest, cancellationToken);
+                            Debug.WriteLine($"[AUTH] Retried request result: {newResponse.StatusCode}");
+                            return newResponse;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"[AUTH] Error during token refresh: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
                     }
                 }
-                finally
-                {
-                    _semaphore.Release();
-                }
-            }
 
-            return response;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[HTTP-ERROR] Exception in SendAsync: {ex.Message}");
+                throw;
+            }
         }
 
         private async Task ApplyTokenToRequest(HttpRequestMessage request)
         {
-            var token = await _getToken();
-            if (!string.IsNullOrEmpty(token))
+            try
             {
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                var token = await _getToken();
+                Debug.WriteLine($"[AUTH] Applying token to request: {!string.IsNullOrEmpty(token)}");
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+                else
+                {
+                    Debug.WriteLine("[AUTH] No token available to apply to request");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[AUTH] Error applying token to request: {ex.Message}");
             }
         }
 

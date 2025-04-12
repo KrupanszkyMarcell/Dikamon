@@ -455,14 +455,32 @@ namespace Dikamon.ViewModels
         private async Task AddItem()
         {
             if (_userId == 0)
+            {
+                await Application.Current.MainPage.DisplayAlert("Hiba", "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.", "OK");
                 return;
+            }
 
             try
             {
+                // Add debug information
+                System.Diagnostics.Debug.WriteLine($"[TRACE] Navigating to NewItemPage with categoryId: {CategoryId}, categoryName: {CategoryName}");
+
+                // Double-check that CategoryId is valid
+                if (CategoryId <= 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ERROR] Invalid CategoryId: {CategoryId}");
+                    await Application.Current.MainPage.DisplayAlert("Hiba", "Érvénytelen kategória azonosító", "OK");
+                    return;
+                }
+
+                // Ensure the categoryId is passed as a string
+                string categoryIdStr = CategoryId.ToString();
+                System.Diagnostics.Debug.WriteLine($"[TRACE] Converted CategoryId to string: {categoryIdStr}");
+
                 // Navigate to the NewItemPage with the category information
                 var navigationParameter = new Dictionary<string, object>
                 {
-                    { "categoryId", CategoryId.ToString() },
+                    { "categoryId", categoryIdStr },
                     { "categoryName", CategoryName }
                 };
 
@@ -470,7 +488,7 @@ namespace Dikamon.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error navigating to NewItemPage: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[ERROR] Error navigating to NewItemPage: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült megnyitni az új termék oldalt", "OK");
             }
         }

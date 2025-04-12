@@ -55,7 +55,8 @@ namespace Dikamon
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
                 })
-                .AddHttpMessageHandler<CustomUserResponseHandler>();
+                .AddHttpMessageHandler<CustomUserResponseHandler>()
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
 
             builder.Services.AddRefitClient<IIngredientsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
@@ -67,7 +68,8 @@ namespace Dikamon
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                });
+                })
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
 
             builder.Services.AddRefitClient<IItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
@@ -77,9 +79,10 @@ namespace Dikamon
                     if (!string.IsNullOrEmpty(token))
                     {
                         client.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                });
+                })
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); 
 
             builder.Services.AddRefitClient<IItemTypesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
@@ -91,7 +94,8 @@ namespace Dikamon
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                });
+                })
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
 
             builder.Services.AddRefitClient<IRecipesApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
@@ -103,7 +107,8 @@ namespace Dikamon
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                });
+                })
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
 
             builder.Services.AddRefitClient<IStoredItemsApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
@@ -115,7 +120,8 @@ namespace Dikamon
                         client.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
                     }
-                });
+                })
+                .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
 
             // Register pages and view models
             builder.Services.AddTransient<MainPage>();
