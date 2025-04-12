@@ -55,23 +55,7 @@
                        Padding="20"
                        Margin="0,0,0,20">
                     <StackLayout Spacing="15">
-                        <!-- Item Type Selection -->
-                        <StackLayout>
-                            <Label Text="Típus"
-                                   FontFamily="Tiny5"
-                                   FontSize="16"
-                                   Margin="0,0,0,5" />
-                            <Frame Padding="10" 
-                                   CornerRadius="8" 
-                                   BorderColor="#DDDDDD"
-                                   HasShadow="False">
-                                <Picker Title="Válassz típust" 
-                                        ItemsSource="{Binding ItemTypes}"
-                                        ItemDisplayBinding="{Binding Name}"
-                                        SelectedItem="{Binding SelectedItemType}"
-                                        FontFamily="OpenSansRegular" />
-                            </Frame>
-                        </StackLayout>
+
 
                         <!-- Item Selection -->
                         <StackLayout>
