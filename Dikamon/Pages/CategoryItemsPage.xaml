@@ -125,7 +125,7 @@
                                               FontAttributes="Bold" 
                                               FontSize="16"/>
 
-                                        <!-- Item Quantity with unit -->
+                                        <!-- Item Quantity with unit - Specifically pass the Stores object -->
                                         <Label Grid.Row="1" 
                                               Grid.Column="1"
                                               TextColor="Gray"

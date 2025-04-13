@@ -173,6 +173,17 @@ namespace Dikamon.ViewModels
                     AvailableItems.Clear();
                     foreach (var item in response.Content)
                     {
+                        // Ensure unit is properly set
+                        if (string.IsNullOrEmpty(item.Unit))
+                        {
+                            Debug.WriteLine($"[WARNING] Item {item.Name} (ID: {item.Id}) has no unit, setting default 'db'");
+                            item.Unit = "db"; // Set a default unit if none is provided
+                        }
+                        else
+                        {
+                            Debug.WriteLine($"[INFO] Item {item.Name} (ID: {item.Id}) has unit: {item.Unit}");
+                        }
+
                         AvailableItems.Add(item);
                         Debug.WriteLine($"Added item: {item.Name}, ID: {item.Id}, Unit: {item.Unit}");
                     }
@@ -206,7 +217,6 @@ namespace Dikamon.ViewModels
                 IsLoading = false;
             }
         }
-
         [RelayCommand]
         private void IncrementQuantity()
         {
@@ -242,7 +252,7 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
-                Debug.WriteLine($"Saving item: {SelectedItem.Name}, Quantity: {Quantity}, User ID: {_userId}, Item ID: {SelectedItem.Id}");
+                Debug.WriteLine($"Saving item: {SelectedItem.Name}, Quantity: {Quantity}, User ID: {_userId}, Item ID: {SelectedItem.Id}, Unit: {SelectedItem.Unit}");
 
                 // Check if the item already exists in the user's storage
                 var storedItemsResponse = await _storedItemsApiCommand.GetStoredItems(_userId);
@@ -258,13 +268,20 @@ namespace Dikamon.ViewModels
                         Debug.WriteLine($"Item already exists in storage, updating quantity from {existingStoredItem.Quantity} to {existingStoredItem.Quantity + Quantity}");
                         existingStoredItem.Quantity += Quantity;
 
+                        // Ensure StoredItem is set correctly
+                        if (existingStoredItem.StoredItem == null)
+                        {
+                            existingStoredItem.StoredItem = SelectedItem;
+                            Debug.WriteLine($"Set StoredItem for existing item with unit: {existingStoredItem.StoredItem.Unit}");
+                        }
+
                         var updateResponse = await _storedItemsApiCommand.AddStoredItem(existingStoredItem);
 
                         if (updateResponse.IsSuccessStatusCode)
                         {
                             await Application.Current?.MainPage?.DisplayAlert(
                                 "Siker",
-                                $"A mennyiség frissítve: {SelectedItem.Name} - {existingStoredItem.Quantity} {ItemUnit}",
+                                $"A mennyiség frissítve: {SelectedItem.Name} - {existingStoredItem.Quantity} {SelectedItem.Unit ?? "db"}",
                                 "OK");
                         }
                         else
@@ -276,16 +293,16 @@ namespace Dikamon.ViewModels
                     else
                     {
                         // Add new stored item
-                        Debug.WriteLine($"Adding new item to storage: {SelectedItem.Name}");
+                        Debug.WriteLine($"Adding new item to storage: {SelectedItem.Name} with unit: {SelectedItem.Unit}");
                         var newStoredItem = new Stores
                         {
                             UserId = _userId,
                             ItemId = SelectedItem.Id,
-                            Quantity = Quantity
+                            Quantity = Quantity,
+                            StoredItem = SelectedItem // Set the full StoredItem object to ensure unit information is preserved
                         };
 
-                        // Make sure TypeId is properly set
-                        Debug.WriteLine($"Using item with TypeId: {SelectedItem.TypeId}");
+                        Debug.WriteLine($"Created new stored item with StoredItem unit: {newStoredItem.StoredItem?.Unit}");
 
                         var addResponse = await _storedItemsApiCommand.AddStoredItem(newStoredItem);
 
@@ -293,7 +310,7 @@ namespace Dikamon.ViewModels
                         {
                             await Application.Current?.MainPage?.DisplayAlert(
                                 "Siker",
-                                $"Termék hozzáadva: {SelectedItem.Name} - {Quantity} {ItemUnit}",
+                                $"Termék hozzáadva: {SelectedItem.Name} - {Quantity} {SelectedItem.Unit ?? "db"}",
                                 "OK");
                         }
                         else
@@ -309,9 +326,9 @@ namespace Dikamon.ViewModels
 
                     // Refresh the category page after adding an item
                     var navigationParameter = new Dictionary<string, object>
-                    {
-                        { "refresh", true }
-                    };
+            {
+                { "refresh", true }
+            };
 
                     // Navigate back
                     await Shell.Current.GoToAsync("..", navigationParameter);

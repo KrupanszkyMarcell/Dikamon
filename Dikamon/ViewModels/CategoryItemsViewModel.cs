@@ -178,6 +178,13 @@ namespace Dikamon.ViewModels
                 {
                     CategoryItems.Clear();
                     System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} items");
+
+                    // First load available items for this category to have a reference
+                    if (AvailableItems.Count == 0)
+                    {
+                        await LoadAvailableItemsAsync();
+                    }
+
                     foreach (var item in response.Content)
                     {
                         // Make sure the StoredItem property is populated
@@ -186,14 +193,25 @@ namespace Dikamon.ViewModels
                             System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to load item details");
                             try
                             {
-                                var itemsResponse = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
-                                if (itemsResponse.IsSuccessStatusCode && itemsResponse.Content != null)
+                                // First check if we already have the item in AvailableItems
+                                var matchingAvailableItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
+                                if (matchingAvailableItem != null)
                                 {
-                                    var matchingItem = itemsResponse.Content.FirstOrDefault(i => i.Id == item.ItemId);
-                                    if (matchingItem != null)
+                                    item.StoredItem = matchingAvailableItem;
+                                    System.Diagnostics.Debug.WriteLine($"Populated item details from AvailableItems for ID {item.ItemId}");
+                                }
+                                else
+                                {
+                                    // If not found in available items, try to get it from API
+                                    var itemsResponse = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
+                                    if (itemsResponse.IsSuccessStatusCode && itemsResponse.Content != null)
                                     {
-                                        item.StoredItem = matchingItem;
-                                        System.Diagnostics.Debug.WriteLine($"Populated item details for ID {item.ItemId}");
+                                        var matchingItem = itemsResponse.Content.FirstOrDefault(i => i.Id == item.ItemId);
+                                        if (matchingItem != null)
+                                        {
+                                            item.StoredItem = matchingItem;
+                                            System.Diagnostics.Debug.WriteLine($"Populated item details from API for ID {item.ItemId}");
+                                        }
                                     }
                                 }
                             }
@@ -203,10 +221,11 @@ namespace Dikamon.ViewModels
                             }
                         }
 
+                        // Log the StoredItem details including the unit
                         if (item.StoredItem != null)
                         {
+                            System.Diagnostics.Debug.WriteLine($"Adding item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}, Unit: {item.StoredItem.Unit ?? "db"}");
                             CategoryItems.Add(item);
-                            System.Diagnostics.Debug.WriteLine($"Added item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}");
                         }
                         else
                         {

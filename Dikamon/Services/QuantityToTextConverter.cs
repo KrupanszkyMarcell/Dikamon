@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using Dikamon.Models;
+using System.Diagnostics;
 
 namespace Dikamon.Services
 {
@@ -8,19 +9,36 @@ namespace Dikamon.Services
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is int quantity)
+            try
             {
-                // The context might be a Stores object which contains a StoredItem property
-                if (parameter is Stores storedItem && storedItem.StoredItem != null)
+                if (value is int quantity)
                 {
-                    return $"{quantity} {storedItem.StoredItem.Unit ?? "db"}";
-                }
+                    // Case 1: The parameter is a Stores object
+                    if (parameter is Stores storedItem && storedItem.StoredItem != null)
+                    {
+                        Debug.WriteLine($"QuantityToTextConverter - Case 1: Using unit from parameter: {storedItem.StoredItem.Unit ?? "db"}");
+                        return $"{quantity} {storedItem.StoredItem.Unit ?? "db"}";
+                    }
 
-                // Default unit if we don't have context
-                return $"{quantity} db";
+                    // Case 2: We're in a DataTemplate with Stores as DataContext, but no parameter passed
+                    var contextStore = parameter as Stores;
+                    if (contextStore?.StoredItem != null)
+                    {
+                        Debug.WriteLine($"QuantityToTextConverter - Case 2: Using unit from context: {contextStore.StoredItem.Unit ?? "db"}");
+                        return $"{quantity} {contextStore.StoredItem.Unit ?? "db"}";
+                    }
+
+                    // Default case: Use "db" as fallback
+                    Debug.WriteLine("QuantityToTextConverter - Default case: Using 'db' as fallback unit");
+                    return $"{quantity} db";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"QuantityToTextConverter - Exception: {ex.Message}");
             }
 
-            return string.Empty;
+            return $"{value} db";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
