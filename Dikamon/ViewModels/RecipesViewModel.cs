@@ -376,8 +376,18 @@ namespace Dikamon.ViewModels
                     { "recipeId", recipe.Id.ToString() }
                 };
 
-                // Navigate to the RecipeDetailsPage
-                await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+                try
+                {
+                    // First try with the nested route
+                    await Shell.Current.GoToAsync($"RecipesPage/{nameof(RecipeDetailsPage)}", navigationParameter);
+                }
+                catch (Exception routeEx)
+                {
+                    Debug.WriteLine($"Error with nested route: {routeEx.Message}, trying direct route...");
+
+                    // If that fails, try with the direct route
+                    await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+                }
             }
             catch (Exception ex)
             {

@@ -23,4 +23,9 @@
         Title="Home"
         ContentTemplate="{DataTemplate local:AfterLoginMainPage}"
         Route="AfterLoginMainPage" />
+
+    <ShellContent
+        Title="Receptek"
+        ContentTemplate="{DataTemplate local:RecipesPage}"
+        Route="RecipesPage" />
 </Shell>

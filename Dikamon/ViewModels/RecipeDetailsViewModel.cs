@@ -457,10 +457,38 @@ namespace Dikamon.ViewModels
             }
         }
 
+
         [RelayCommand]
         private async Task GoBack()
         {
-            await Shell.Current.GoToAsync("..");
+            try
+            {
+                // Using an absolute route is often more reliable than relative navigation
+                if (Shell.Current.Navigation.NavigationStack.Count > 1)
+                {
+                    await Shell.Current.Navigation.PopAsync();
+                }
+                else
+                {
+                    // Fallback to the recipes page as an absolute route
+                    await Shell.Current.GoToAsync("//RecipesPage");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Navigation error in GoBack: {ex.Message}");
+                // Second fallback - try a different navigation approach
+                try
+                {
+                    await Shell.Current.GoToAsync("//RecipesPage");
+                }
+                catch (Exception innerEx)
+                {
+                    Debug.WriteLine($"Second navigation error: {innerEx.Message}");
+                    // Final fallback - try to navigate to main page
+                    await Shell.Current.GoToAsync("//AfterLoginMainPage");
+                }
+            }
         }
     }
 }

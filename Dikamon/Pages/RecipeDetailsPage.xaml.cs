@@ -1,37 +1,44 @@
 using Dikamon.ViewModels;
 using System.Diagnostics;
 
-namespace Dikamon.Pages
+namespace Dikamon.Pages;
+
+[QueryProperty(nameof(RecipeId), "recipeId")]
+public partial class RecipeDetailsPage : ContentPage
 {
-    [QueryProperty(nameof(RecipeId), "recipeId")]
-    public partial class RecipeDetailsPage : ContentPage
+    private readonly RecipeDetailsViewModel _viewModel;
+    public string RecipeId { get; set; }
+
+    public RecipeDetailsPage(RecipeDetailsViewModel viewModel)
     {
-        private readonly RecipeDetailsViewModel _viewModel;
-        public string RecipeId { get; set; }
+        InitializeComponent();
+        _viewModel = viewModel;
+        this.BindingContext = viewModel;
+    }
 
-        public RecipeDetailsPage(RecipeDetailsViewModel viewModel)
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        Debug.WriteLine("RecipeDetailsPage.OnAppearing");
+
+        if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeIdInt))
         {
-            InitializeComponent();
-            _viewModel = viewModel;
-            this.BindingContext = viewModel;
-        }
-
-        protected override void OnAppearing()
-        {
-            base.OnAppearing();
-
-            // Apply the RecipeId property to the ViewModel
-            if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeIdInt))
+            Debug.WriteLine($"Setting RecipeId to {recipeIdInt}");
+            if (_viewModel.RecipeId != recipeIdInt)
             {
-                Debug.WriteLine($"RecipeDetailsPage setting RecipeId from QueryProperty: {recipeIdInt}");
                 _viewModel.RecipeId = recipeIdInt;
             }
-            else
-            {
-                Debug.WriteLine($"RecipeDetailsPage invalid RecipeId: {RecipeId}");
-                _viewModel.HasError = true;
-                _viewModel.ErrorMessage = "Érvénytelen recept azonosító";
-            }
         }
+        else
+        {
+            Debug.WriteLine($"Invalid RecipeId: {RecipeId}");
+        }
+    }
+
+    protected override void OnDisappearing()
+    {
+        Debug.WriteLine("RecipeDetailsPage.OnDisappearing");
+        base.OnDisappearing();
     }
 }

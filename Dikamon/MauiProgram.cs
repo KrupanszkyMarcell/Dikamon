@@ -163,6 +163,8 @@ namespace Dikamon
             Routing.RegisterRoute(nameof(NewItemPage), typeof(NewItemPage));
             Routing.RegisterRoute(nameof(RecipesPage), typeof(RecipesPage));
             Routing.RegisterRoute(nameof(RecipeDetailsPage), typeof(RecipeDetailsPage));
+            Routing.RegisterRoute($"RecipesPage/{nameof(RecipeDetailsPage)}", typeof(RecipeDetailsPage));
+            Routing.RegisterRoute(nameof(RecipeDetailsPage), typeof(RecipeDetailsPage));
 
 #if DEBUG
             builder.Logging.AddDebug();
