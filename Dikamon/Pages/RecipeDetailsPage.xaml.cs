@@ -1,35 +1,37 @@
 using Dikamon.ViewModels;
 using System.Diagnostics;
 
-namespace Dikamon.Pages;
-
-[QueryProperty(nameof(RecipeId), "recipeId")]
-public partial class RecipeDetailsPage : ContentPage
+namespace Dikamon.Pages
 {
-    private readonly RecipeDetailsViewModel _viewModel;
-    public string RecipeId { get; set; }
-
-    public RecipeDetailsPage(RecipeDetailsViewModel viewModel)
+    [QueryProperty(nameof(RecipeId), "recipeId")]
+    public partial class RecipeDetailsPage : ContentPage
     {
-        InitializeComponent();
-        _viewModel = viewModel;
-        this.BindingContext = viewModel;
-    }
+        private readonly RecipeDetailsViewModel _viewModel;
+        public string RecipeId { get; set; }
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-
-        // Pass the recipeId to the ViewModel
-        if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeId))
+        public RecipeDetailsPage(RecipeDetailsViewModel viewModel)
         {
-            Debug.WriteLine($"RecipeDetailsPage: Setting RecipeId in ViewModel to: {recipeId}");
-            _viewModel.RecipeId = recipeId;
+            InitializeComponent();
+            _viewModel = viewModel;
+            this.BindingContext = viewModel;
         }
-        else
+
+        protected override void OnAppearing()
         {
-            Debug.WriteLine($"RecipeDetailsPage: Invalid RecipeId: {RecipeId}");
-            DisplayAlert("Hiba", "Érvénytelen recept azonosító", "OK");
+            base.OnAppearing();
+
+            // Apply the RecipeId property to the ViewModel
+            if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeIdInt))
+            {
+                Debug.WriteLine($"RecipeDetailsPage setting RecipeId from QueryProperty: {recipeIdInt}");
+                _viewModel.RecipeId = recipeIdInt;
+            }
+            else
+            {
+                Debug.WriteLine($"RecipeDetailsPage invalid RecipeId: {RecipeId}");
+                _viewModel.HasError = true;
+                _viewModel.ErrorMessage = "Érvénytelen recept azonosító";
+            }
         }
     }
 }

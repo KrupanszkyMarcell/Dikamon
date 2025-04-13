@@ -63,7 +63,15 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         private bool _canMakeRecipe;
 
+        [ObservableProperty]
+        private string _errorMessage = string.Empty;
+
+        [ObservableProperty]
+        private bool _hasError = false;
+
         private int _userId;
+        private bool _isUserIdLoaded = false;
+        private readonly SemaphoreSlim _initializationLock = new SemaphoreSlim(1, 1);
 
         public RecipeDetailsViewModel(
             IRecipesApiCommand recipesApiCommand,
@@ -77,50 +85,99 @@ namespace Dikamon.ViewModels
             Ingredients = new ObservableCollection<IngredientViewModel>();
             InstructionSteps = new ObservableCollection<InstructionStepViewModel>();
 
-            LoadUserIdAsync();
+            // Start loading the user ID right away
+            Task.Run(async () => await EnsureUserIdLoadedAsync());
         }
 
         partial void OnRecipeIdChanged(int value)
         {
             if (value > 0)
             {
-                Debug.WriteLine($"Recipe ID changed to {value}, loading recipe details");
-                LoadRecipeDetailsAsync(value).ConfigureAwait(false);
+                Debug.WriteLine($"Recipe ID changed to {value}, will load recipe details");
+                // Use a fire-and-forget Task to handle async initialization
+                Task.Run(async () => await InitializeAsync(value));
             }
         }
 
-        private async void LoadUserIdAsync()
+        private async Task InitializeAsync(int recipeId)
         {
             try
             {
+                await _initializationLock.WaitAsync();
+
+                // First ensure user ID is loaded
+                if (!await EnsureUserIdLoadedAsync())
+                {
+                    Debug.WriteLine("Failed to load user ID during initialization");
+                    HasError = true;
+                    ErrorMessage = "Nem sikerült betölteni a felhasználói adatokat. Kérjük, jelentkezzen be újra.";
+                    return;
+                }
+
+                // Now load recipe details
+                await LoadRecipeDetailsAsync(recipeId);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error during initialization: {ex.Message}");
+                HasError = true;
+                ErrorMessage = "Hiba történt az adatok betöltése közben.";
+            }
+            finally
+            {
+                _initializationLock.Release();
+            }
+        }
+
+        private async Task<bool> EnsureUserIdLoadedAsync()
+        {
+            // If user ID is already loaded, return immediately
+            if (_isUserIdLoaded && _userId > 0)
+            {
+                return true;
+            }
+
+            try
+            {
+                // Try to get from user object first
                 var userJson = await SecureStorage.GetAsync("user");
+                Debug.WriteLine($"Looking for user ID, found userJson: {!string.IsNullOrEmpty(userJson)}");
+
                 if (!string.IsNullOrEmpty(userJson))
                 {
                     var user = System.Text.Json.JsonSerializer.Deserialize<Models.Users>(userJson);
                     if (user != null && user.Id.HasValue)
                     {
                         _userId = user.Id.Value;
-                        Debug.WriteLine($"User ID loaded: {_userId}");
+                        _isUserIdLoaded = true;
+                        Debug.WriteLine($"User ID loaded from user object: {_userId}");
+                        return true;
                     }
                     else
                     {
-                        Debug.WriteLine("User or User.Id is null after deserialization");
+                        Debug.WriteLine("User object or User.Id is null after deserialization");
                     }
                 }
-                else
+
+                // Fallback: Try to get user ID directly
+                var userIdStr = await SecureStorage.GetAsync("userId");
+                Debug.WriteLine($"Looking for userId key, found: {!string.IsNullOrEmpty(userIdStr)}");
+
+                if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
                 {
-                    // Fallback: Try to get user ID from a different source
-                    var userIdStr = await SecureStorage.GetAsync("userId");
-                    if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
-                    {
-                        _userId = userId;
-                        Debug.WriteLine($"User ID loaded from userId key: {_userId}");
-                    }
+                    _userId = userId;
+                    _isUserIdLoaded = true;
+                    Debug.WriteLine($"User ID loaded from userId key: {_userId}");
+                    return true;
                 }
+
+                Debug.WriteLine("Failed to load user ID from any source");
+                return false;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading user ID: {ex.Message}");
+                return false;
             }
         }
 
@@ -131,12 +188,14 @@ namespace Dikamon.ViewModels
                 if (_userId <= 0)
                 {
                     Debug.WriteLine("Cannot load recipe details: User ID is not available");
-                    await Application.Current.MainPage.DisplayAlert("Hiba", "A felhasználói adatok nem elérhetők", "OK");
+                    HasError = true;
+                    ErrorMessage = "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.";
                     return;
                 }
 
                 IsLoading = true;
-                Debug.WriteLine($"Loading recipe details for ID: {recipeId}");
+                HasError = false;
+                Debug.WriteLine($"Loading recipe details for ID: {recipeId}, User ID: {_userId}");
 
                 // Load the recipe
                 var response = await _recipesApiCommand.GetRecipesById(recipeId);
@@ -157,13 +216,15 @@ namespace Dikamon.ViewModels
                 else
                 {
                     Debug.WriteLine($"Failed to load recipe details: {response.Error?.Content}");
-                    await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült betölteni a recept részleteit", "OK");
+                    HasError = true;
+                    ErrorMessage = "Nem sikerült betölteni a recept részleteit.";
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading recipe details: {ex.Message}");
-                await Application.Current.MainPage.DisplayAlert("Hiba", "Hiba történt a recept betöltése közben", "OK");
+                HasError = true;
+                ErrorMessage = "Hiba történt a recept betöltése közben.";
             }
             finally
             {
@@ -195,6 +256,13 @@ namespace Dikamon.ViewModels
                         // Create view models for each ingredient with the required and available quantities
                         foreach (var ingredient in recipeIngredients)
                         {
+                            // Skip ingredients with null Item
+                            if (ingredient.Item == null)
+                            {
+                                Debug.WriteLine($"Skipping ingredient with ID {ingredient.ItemId} because Item is null");
+                                continue;
+                            }
+
                             var storedItem = storedItems.FirstOrDefault(si => si.ItemId == ingredient.ItemId);
                             var availableQuantity = storedItem?.Quantity ?? 0;
 
@@ -258,8 +326,18 @@ namespace Dikamon.ViewModels
         private void UpdateCanMakeRecipe()
         {
             // We can make the recipe if we have enough of all ingredients
-            CanMakeRecipe = Ingredients.All(i => i.HasEnough);
+            CanMakeRecipe = Ingredients.Count > 0 && Ingredients.All(i => i.HasEnough);
             Debug.WriteLine($"Can make recipe: {CanMakeRecipe}");
+        }
+
+        [RelayCommand]
+        private async Task RetryLoading()
+        {
+            if (RecipeId > 0)
+            {
+                Debug.WriteLine($"Retrying loading recipe details for ID: {RecipeId}");
+                await InitializeAsync(RecipeId);
+            }
         }
 
         [RelayCommand]

@@ -30,8 +30,44 @@
                     Command="{Binding GoBackCommand}"/>
         </Grid>
 
-        <ScrollView Grid.Row="1">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1" 
+                         IsRunning="{Binding IsLoading}"
+                         IsVisible="{Binding IsLoading}"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Color="#AD9163"
+                         Scale="2" />
+
+        <!-- Error State -->
+        <StackLayout Grid.Row="1" 
+                   IsVisible="{Binding HasError}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"
+                   Spacing="20"
+                   Padding="20">
+            <Image Source="fridgebuddy.png" 
+                 WidthRequest="80" 
+                 HeightRequest="80"
+                 HorizontalOptions="Center" />
+            <Label Text="{Binding ErrorMessage}"
+                 FontSize="18"
+                 TextColor="#FF5252"
+                 HorizontalTextAlignment="Center"/>
+            <Button Text="Újrapróbálkozás" 
+                  Command="{Binding RetryLoadingCommand}"
+                  BackgroundColor="#AD9163"
+                  TextColor="White"
+                  CornerRadius="10"
+                  Margin="0,20,0,0"
+                  HorizontalOptions="Center"
+                  WidthRequest="200"/>
+        </StackLayout>
+
+        <!-- Content when loaded successfully -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding HasError, Converter={StaticResource InvertedBoolConverter}}">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                  IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
                 <!-- Recipe Image -->
                 <Image Grid.Row="0" 
@@ -235,23 +271,12 @@
                       Padding="20,20,20,40"
                       RowDefinitions="Auto,Auto">
 
-                    <!-- Loading indicator -->
-                    <ActivityIndicator Grid.Row="0"
-                                     IsRunning="{Binding IsLoading}"
-                                     IsVisible="{Binding IsLoading}"
-                                     Color="#AD9163"
-                                     HeightRequest="40"
-                                     WidthRequest="40"
-                                     HorizontalOptions="Center"
-                                     Margin="0,0,0,10"/>
-
                     <!-- Make Recipe button -->
-                    <Frame Grid.Row="1"
+                    <Frame Grid.Row="0"
                            BackgroundColor="{Binding CanMakeRecipe, Converter={StaticResource BoolToColorConverter}}"
                            CornerRadius="10"
                            HasShadow="True"
-                           Padding="0"
-                           IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                           Padding="0">
                         <Button Text="Elkészítem!"
                                 TextColor="White"
                                 FontFamily="Tiny5"
