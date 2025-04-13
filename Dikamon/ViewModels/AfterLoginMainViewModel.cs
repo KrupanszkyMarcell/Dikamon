@@ -53,7 +53,7 @@ namespace Dikamon.ViewModels
         async Task GoToRecipes()
         {
             // Navigate to recipes page (to be implemented)
-            await Shell.Current.DisplayAlert("Receptek", "A receptek funkcionalitás hamarosan elérhető lesz!", "OK");
+            await Shell.Current.GoToAsync(nameof(RecipesPage), true);
         }
 
         [RelayCommand]

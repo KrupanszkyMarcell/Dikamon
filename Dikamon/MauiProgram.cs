@@ -136,6 +136,8 @@ namespace Dikamon
             builder.Services.AddTransient<AfterLoginMainViewModel>();
             builder.Services.AddTransient<CategoryItemsPage>();
             builder.Services.AddTransient<CategoryItemsViewModel>();
+            builder.Services.AddTransient<RecipesPage>();
+            builder.Services.AddTransient<RecipesViewModel>();
 
             // Register NewItemPage and NewItemViewModel
             builder.Services.AddTransient<NewItemPage>();
@@ -154,6 +156,7 @@ namespace Dikamon
             Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
             Routing.RegisterRoute(nameof(CategoryItemsPage), typeof(CategoryItemsPage));
             Routing.RegisterRoute(nameof(NewItemPage), typeof(NewItemPage));
+            Routing.RegisterRoute(nameof(RecipesPage), typeof(RecipesPage));
 
 #if DEBUG
             builder.Logging.AddDebug();
