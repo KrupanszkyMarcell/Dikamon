@@ -9,7 +9,6 @@
              Title="{Binding CategoryName}">
 
     <ContentPage.Resources>
-        <services:QuantityToTextConverter x:Key="QuantityConverter" />
         <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         <services:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
     </ContentPage.Resources>
@@ -125,12 +124,18 @@
                                               FontAttributes="Bold" 
                                               FontSize="16"/>
 
-                                        <!-- Item Quantity with unit - Specifically pass the Stores object -->
+                                        <!-- Item Quantity with unit - Using MultiBinding -->
                                         <Label Grid.Row="1" 
                                               Grid.Column="1"
                                               TextColor="Gray"
-                                              FontSize="14"
-                                              Text="{Binding Quantity, Converter={StaticResource QuantityConverter}, ConverterParameter={Binding .}}"/>
+                                              FontSize="14">
+                                            <Label.Text>
+                                                <MultiBinding StringFormat="{}{0} {1}">
+                                                    <Binding Path="Quantity" />
+                                                    <Binding Path="StoredItem.Unit" TargetNullValue="db" />
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
 
                                         <!-- Control Buttons -->
                                         <StackLayout Grid.Row="0" 

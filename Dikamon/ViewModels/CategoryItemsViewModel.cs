@@ -221,10 +221,17 @@ namespace Dikamon.ViewModels
                             }
                         }
 
-                        // Log the StoredItem details including the unit
+                        // Ensure Unit property is set to a non-null value
                         if (item.StoredItem != null)
                         {
-                            System.Diagnostics.Debug.WriteLine($"Adding item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}, Unit: {item.StoredItem.Unit ?? "db"}");
+                            // If the Unit is null, set a default value
+                            if (string.IsNullOrEmpty(item.StoredItem.Unit))
+                            {
+                                item.StoredItem.Unit = "db";
+                                System.Diagnostics.Debug.WriteLine($"Set default unit 'db' for item {item.StoredItem.Name}");
+                            }
+
+                            System.Diagnostics.Debug.WriteLine($"Adding item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}, Unit: {item.StoredItem.Unit}");
                             CategoryItems.Add(item);
                         }
                         else
@@ -275,8 +282,15 @@ namespace Dikamon.ViewModels
                     System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} available items");
                     foreach (var item in response.Content)
                     {
+                        // Ensure Unit is set to a non-null value
+                        if (string.IsNullOrEmpty(item.Unit))
+                        {
+                            item.Unit = "db";
+                            System.Diagnostics.Debug.WriteLine($"Set default unit 'db' for available item {item.Name}");
+                        }
+
                         AvailableItems.Add(item);
-                        System.Diagnostics.Debug.WriteLine($"Added available item: {item.Name}");
+                        System.Diagnostics.Debug.WriteLine($"Added available item: {item.Name} with unit: {item.Unit}");
                     }
                 }
                 else
@@ -355,6 +369,11 @@ namespace Dikamon.ViewModels
                         PopulateStoredItem(item);
                         if (item.StoredItem != null)
                         {
+                            // Ensure Unit is set to a non-null value
+                            if (string.IsNullOrEmpty(item.StoredItem.Unit))
+                            {
+                                item.StoredItem.Unit = "db";
+                            }
                             apiSearchResults.Add(item);
                         }
                     }
@@ -379,6 +398,12 @@ namespace Dikamon.ViewModels
                             // Check if the item belongs to our category
                             if (item.StoredItem != null)
                             {
+                                // Ensure Unit is set to a non-null value
+                                if (string.IsNullOrEmpty(item.StoredItem.Unit))
+                                {
+                                    item.StoredItem.Unit = "db";
+                                }
+
                                 // First, check if we can determine the category from the stored item
                                 bool isInCategory = item.StoredItem.TypeId == CategoryId;
 
