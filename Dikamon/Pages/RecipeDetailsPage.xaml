@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Dikamon.Pages.RecipeDetailsPage"
+             xmlns:vm="clr-namespace:Dikamon.ViewModels"
+             xmlns:services="clr-namespace:Dikamon.Services"
+             x:DataType="vm:RecipeDetailsViewModel"
+             Title="{Binding Recipe.Name}">
+
+    <ContentPage.Resources>
+        <services:ImageSourceConverter x:Key="ImageSourceConverter" />
+        <services:BoolToColorConverter x:Key="BoolToColorConverter" />
+        <services:ColorConverter x:Key="ColorConverter" />
+        <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*"
+          BackgroundColor="{StaticResource MainColor}"
+          Padding="0">
+
+        <!-- Back button and header -->
+        <Grid Grid.Row="0" 
+              BackgroundColor="Transparent"
+              Margin="10,10,10,0">
+            <Button Text="←"
+                    FontSize="24"
+                    BackgroundColor="Transparent"
+                    TextColor="#26283b"
+                    HorizontalOptions="Start"
+                    Command="{Binding GoBackCommand}"/>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+
+                <!-- Recipe Image -->
+                <Image Grid.Row="0" 
+                       Source="{Binding Recipe.Image, Converter={StaticResource ImageSourceConverter}}"
+                       Aspect="AspectFill"
+                       HeightRequest="200" />
+
+                <!-- Recipe Title and Type -->
+                <Grid Grid.Row="1" 
+                      BackgroundColor="#AD9163" 
+                      Padding="20,15">
+                    <StackLayout>
+                        <Label Text="{Binding Recipe.Name}" 
+                               FontFamily="Tiny5" 
+                               FontSize="32" 
+                               TextColor="White"/>
+                        <StackLayout Orientation="Horizontal" Spacing="15">
+                            <Label Text="{Binding Recipe.Type}" 
+                                   FontFamily="Tiny5" 
+                                   FontSize="18" 
+                                   TextColor="White"/>
+                            <Label Text="{Binding Recipe.Difficulty, StringFormat='Nehézség: {0}/10'}" 
+                                   FontFamily="Tiny5" 
+                                   FontSize="18" 
+                                   TextColor="White"/>
+                            <Label Text="{Binding Recipe.Time, StringFormat='Elk. idő (perc): {0}'}" 
+                                   FontFamily="Tiny5" 
+                                   FontSize="18" 
+                                   TextColor="White"/>
+                        </StackLayout>
+                    </StackLayout>
+                </Grid>
+
+                <!-- Ingredients section -->
+                <Grid Grid.Row="2"
+                      Padding="20"
+                      RowDefinitions="Auto,*">
+
+                    <Label Grid.Row="0"
+                           Text="Hozzávalók (a konyhámban)" 
+                           FontFamily="Tiny5" 
+                           FontSize="24"
+                           TextDecorations="Underline"
+                           Margin="0,0,0,15"/>
+
+                    <CollectionView Grid.Row="1" 
+                                  ItemsSource="{Binding Ingredients}"
+                                  SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,10"
+                                       BackgroundColor="White"
+                                       StrokeShape="RoundRectangle 8,8,8,8"
+                                       Stroke="#E0E0E0"
+                                       StrokeThickness="1"
+                                       Padding="15,10">
+                                    <Grid ColumnDefinitions="*,Auto,Auto">
+                                        <!-- Ingredient name and image -->
+                                        <StackLayout Grid.Column="0"
+                                                   Orientation="Horizontal"
+                                                   Spacing="10">
+                                            <Image Source="{Binding Item.Image}"
+                                                  WidthRequest="30"
+                                                  HeightRequest="30"
+                                                  Aspect="AspectFit"
+                                                  VerticalOptions="Center"/>
+                                            <Label Text="{Binding Item.Name}"
+                                                  FontAttributes="Bold"
+                                                  FontFamily="OpenSansRegular"
+                                                  FontSize="16"
+                                                  VerticalOptions="Center" />
+                                        </StackLayout>
+
+                                        <!-- Required quantity -->
+                                        <StackLayout Grid.Column="1" 
+                                                   Orientation="Horizontal"
+                                                   VerticalOptions="Center">
+                                            <Label Text="Kell:"
+                                                  TextColor="#666666"
+                                                  FontSize="14"
+                                                  FontFamily="OpenSansRegular"
+                                                  Margin="0,0,5,0" />
+                                            <Label Text="{Binding Quantity, StringFormat='{0}'}"
+                                                  TextColor="#AD9163"
+                                                  FontAttributes="Bold"
+                                                  FontSize="16"
+                                                  FontFamily="OpenSansRegular" />
+                                            <Label Text="{Binding Item.Unit, TargetNullValue='db'}"
+                                                  TextColor="#AD9163"
+                                                  FontAttributes="Bold"
+                                                  FontSize="16"
+                                                  FontFamily="OpenSansRegular" />
+                                        </StackLayout>
+
+                                        <!-- Available quantity (in red or green) -->
+                                        <StackLayout Grid.Column="2" 
+                                                   Orientation="Horizontal"
+                                                   VerticalOptions="Center"
+                                                   Margin="10,0,0,0">
+                                            <Label Text="Van:"
+                                                  TextColor="#666666"
+                                                  FontSize="14"
+                                                  FontFamily="OpenSansRegular"
+                                                  Margin="0,0,5,0" />
+                                            <Label Text="{Binding AvailableQuantity, StringFormat='{0}'}"
+                                                  TextColor="{Binding HasEnough, Converter={StaticResource ColorConverter}}"
+                                                  FontAttributes="Bold"
+                                                  FontSize="16"
+                                                  FontFamily="OpenSansRegular" />
+                                            <Label Text="{Binding Item.Unit, TargetNullValue='db'}"
+                                                  TextColor="{Binding HasEnough, Converter={StaticResource ColorConverter}}"
+                                                  FontAttributes="Bold"
+                                                  FontSize="16"
+                                                  FontFamily="OpenSansRegular" />
+                                        </StackLayout>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                        <CollectionView.EmptyView>
+                            <StackLayout HorizontalOptions="Center"
+                                       VerticalOptions="Center">
+                                <Label Text="Nincsenek hozzávalók"
+                                      FontSize="16"
+                                      TextColor="Gray"
+                                      HorizontalTextAlignment="Center"/>
+                            </StackLayout>
+                        </CollectionView.EmptyView>
+                    </CollectionView>
+                </Grid>
+
+                <!-- Description section -->
+                <StackLayout Grid.Row="3"
+                             Padding="20">
+                    <Label Text="Elkészítés" 
+                           FontFamily="Tiny5" 
+                           FontSize="24"
+                           TextDecorations="Underline"
+                           Margin="0,0,0,15"/>
+                    <Label Text="{Binding Recipe.Description}"
+                           FontFamily="OpenSansRegular"
+                           FontSize="16"
+                           Margin="0,0,0,15"/>
+                </StackLayout>
+
+                <!-- Instructions section -->
+                <Grid Grid.Row="4"
+                       Padding="20">
+                    <StackLayout>
+                        <Label Text="Elkészítési lépések" 
+                               FontFamily="Tiny5" 
+                               FontSize="24"
+                               TextDecorations="Underline"
+                               Margin="0,0,0,15"/>
+
+                        <CollectionView ItemsSource="{Binding InstructionSteps}"
+                                    Margin="0,0,0,10"
+                                    SelectionMode="None">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,15"
+                                           BackgroundColor="White"
+                                           StrokeShape="RoundRectangle 10,10,10,10"
+                                           Stroke="#AD9163"
+                                           StrokeThickness="1"
+                                           Padding="0">
+                                        <Grid ColumnDefinitions="Auto,*"
+                                             RowDefinitions="Auto">
+                                            <!-- Step number -->
+                                            <Frame Grid.Column="0"
+                                                 BackgroundColor="#AD9163"
+                                                 WidthRequest="40"
+                                                 HeightRequest="40"
+                                                 CornerRadius="0"
+                                                 Margin="0"
+                                                 Padding="0">
+                                                <Label Text="{Binding StepNumber}"
+                                                     FontFamily="Tiny5"
+                                                     TextColor="White"
+                                                     FontSize="20"
+                                                     VerticalOptions="Center"
+                                                     HorizontalOptions="Center"/>
+                                            </Frame>
+
+                                            <!-- Step description -->
+                                            <Label Grid.Column="1"
+                                                 Text="{Binding Description}"
+                                                 FontFamily="OpenSansRegular"
+                                                 Margin="15,10"
+                                                 LineBreakMode="WordWrap"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </StackLayout>
+                </Grid>
+
+                <!-- Action button -->
+                <Grid Grid.Row="5"
+                      Padding="20,20,20,40"
+                      RowDefinitions="Auto,Auto">
+
+                    <!-- Loading indicator -->
+                    <ActivityIndicator Grid.Row="0"
+                                     IsRunning="{Binding IsLoading}"
+                                     IsVisible="{Binding IsLoading}"
+                                     Color="#AD9163"
+                                     HeightRequest="40"
+                                     WidthRequest="40"
+                                     HorizontalOptions="Center"
+                                     Margin="0,0,0,10"/>
+
+                    <!-- Make Recipe button -->
+                    <Frame Grid.Row="1"
+                           BackgroundColor="{Binding CanMakeRecipe, Converter={StaticResource BoolToColorConverter}}"
+                           CornerRadius="10"
+                           HasShadow="True"
+                           Padding="0"
+                           IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                        <Button Text="Elkészítem!"
+                                TextColor="White"
+                                FontFamily="Tiny5"
+                                FontSize="18"
+                                HeightRequest="50"
+                                BackgroundColor="Transparent"
+                                Command="{Binding MakeRecipeCommand}"
+                                IsEnabled="{Binding CanMakeRecipe}" />
+                    </Frame>
+
+                    <!-- Warning if can't make recipe -->
+                    <StackLayout Grid.Row="1"
+                                Margin="0,10,0,0"
+                                IsVisible="{Binding CanMakeRecipe, Converter={StaticResource InvertedBoolConverter}}">
+                        <Label Text="Nincs elég hozzávalód a recepthez!"
+                              TextColor="Red"
+                              FontAttributes="Bold"
+                              HorizontalOptions="Center"/>
+                        <Label Text="Nézd meg a hozzávalók listáját, és egészítsd ki a készletedet!"
+                              TextColor="Gray"
+                              FontSize="14"
+                              HorizontalTextAlignment="Center"
+                              HorizontalOptions="Center" />
+                    </StackLayout>
+                </Grid>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

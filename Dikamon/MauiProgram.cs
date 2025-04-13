@@ -138,6 +138,8 @@ namespace Dikamon
             builder.Services.AddTransient<CategoryItemsViewModel>();
             builder.Services.AddTransient<RecipesPage>();
             builder.Services.AddTransient<RecipesViewModel>();
+            builder.Services.AddTransient<RecipeDetailsPage>();
+            builder.Services.AddTransient<RecipeDetailsViewModel>();
 
             // Register NewItemPage and NewItemViewModel
             builder.Services.AddTransient<NewItemPage>();
@@ -149,6 +151,8 @@ namespace Dikamon
             builder.Services.AddSingleton<StringNotEmptyConverter>();
             builder.Services.AddSingleton<Services.ImageSourceConverter>();
             builder.Services.AddSingleton<GreaterThanOneConverter>();
+            builder.Services.AddSingleton<BoolToColorConverter>();
+            builder.Services.AddSingleton<ColorConverter>();
 
             // Register routes
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
@@ -158,6 +162,7 @@ namespace Dikamon
             Routing.RegisterRoute(nameof(CategoryItemsPage), typeof(CategoryItemsPage));
             Routing.RegisterRoute(nameof(NewItemPage), typeof(NewItemPage));
             Routing.RegisterRoute(nameof(RecipesPage), typeof(RecipesPage));
+            Routing.RegisterRoute(nameof(RecipeDetailsPage), typeof(RecipeDetailsPage));
 
 #if DEBUG
             builder.Logging.AddDebug();
