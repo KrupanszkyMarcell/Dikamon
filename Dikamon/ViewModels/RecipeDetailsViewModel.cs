@@ -197,12 +197,13 @@ namespace Dikamon.ViewModels
                 HasError = false;
                 Debug.WriteLine($"Loading recipe details for ID: {recipeId}, User ID: {_userId}");
 
-                // Load the recipe
-                var response = await _recipesApiCommand.GetRecipesById(recipeId);
-                if (response.IsSuccessStatusCode && response.Content != null && response.Content.Count > 0)
+                // Use the corrected API method to get recipe by ID
+                var response = await _recipesApiCommand.GetRecipeById(recipeId);
+
+                if (response.IsSuccessStatusCode && response.Content != null)
                 {
-                    Recipe = response.Content[0];
-                    Debug.WriteLine($"Recipe loaded: {Recipe.Name}");
+                    Recipe = response.Content;
+                    Debug.WriteLine($"Recipe loaded successfully: {Recipe.Name}");
 
                     // Load ingredients
                     await LoadIngredientsAsync(recipeId);
@@ -218,20 +219,28 @@ namespace Dikamon.ViewModels
                     Debug.WriteLine($"Failed to load recipe details: {response.Error?.Content}");
                     HasError = true;
                     ErrorMessage = "Nem sikerült betölteni a recept részleteit.";
+
+                    // Log additional details about the error
+                    if (response.Error != null)
+                    {
+                        Debug.WriteLine($"Error message: {response.Error.Message}");
+                        Debug.WriteLine($"Error content: {response.Error.Content}");
+                        Debug.WriteLine($"Status code: {response.StatusCode}");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading recipe details: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 HasError = true;
-                ErrorMessage = "Hiba történt a recept betöltése közben.";
+                ErrorMessage = $"Hiba történt a recept betöltése közben: {ex.Message}";
             }
             finally
             {
                 IsLoading = false;
             }
         }
-
         private async Task LoadIngredientsAsync(int recipeId)
         {
             try

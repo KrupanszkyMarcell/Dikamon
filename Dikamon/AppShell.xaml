@@ -28,4 +28,9 @@
         Title="Receptek"
         ContentTemplate="{DataTemplate local:RecipesPage}"
         Route="RecipesPage" />
+
+    <ShellContent
+        Title="Recept Részletek"
+        ContentTemplate="{DataTemplate local:RecipeDetailsPage}"
+        Route="RecipeDetailsPage" />
 </Shell>

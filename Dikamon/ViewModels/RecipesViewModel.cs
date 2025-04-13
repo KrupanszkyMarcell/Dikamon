@@ -372,26 +372,43 @@ namespace Dikamon.ViewModels
 
                 // Create navigation parameters with the recipe ID
                 var navigationParameter = new Dictionary<string, object>
-                {
-                    { "recipeId", recipe.Id.ToString() }
-                };
+        {
+            { "recipeId", recipe.Id.ToString() }
+        };
+
+                Debug.WriteLine($"Navigation parameter: recipeId = {recipe.Id}");
 
                 try
                 {
-                    // First try with the nested route
-                    await Shell.Current.GoToAsync($"RecipesPage/{nameof(RecipeDetailsPage)}", navigationParameter);
-                }
-                catch (Exception routeEx)
-                {
-                    Debug.WriteLine($"Error with nested route: {routeEx.Message}, trying direct route...");
-
-                    // If that fails, try with the direct route
+                    // Try direct navigation first
                     await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+                    Debug.WriteLine("Navigation completed successfully");
+                }
+                catch (Exception navEx)
+                {
+                    Debug.WriteLine($"Navigation error: {navEx.Message}, trying alternative approach");
+
+                    // If that fails, try with absolute path
+                    try
+                    {
+                        await Shell.Current.GoToAsync($"//RecipesPage/{nameof(RecipeDetailsPage)}", navigationParameter);
+                        Debug.WriteLine("Alternative navigation completed");
+                    }
+                    catch (Exception absEx)
+                    {
+                        Debug.WriteLine($"Absolute path navigation error: {absEx.Message}");
+
+                        // Last resort: try to register the route at runtime and navigate
+                        var lastAttempt = $"//{nameof(RecipeDetailsPage)}";
+                        Debug.WriteLine($"Final attempt with route: {lastAttempt}");
+                        await Shell.Current.GoToAsync(lastAttempt, navigationParameter);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error viewing recipe details: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Application.Current.MainPage.DisplayAlert(
                     "Hiba",
                     $"Nem sikerült megnyitni a recept részleteit: {ex.Message}",

@@ -7,13 +7,44 @@ namespace Dikamon.Pages;
 public partial class RecipeDetailsPage : ContentPage
 {
     private readonly RecipeDetailsViewModel _viewModel;
-    public string RecipeId { get; set; }
+    private string _recipeId;
+
+    public string RecipeId
+    {
+        get => _recipeId;
+        set
+        {
+            _recipeId = value;
+            Debug.WriteLine($"RecipeId property set to: {value}");
+            UpdateViewModelRecipeId();
+        }
+    }
 
     public RecipeDetailsPage(RecipeDetailsViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
-        this.BindingContext = viewModel;
+        BindingContext = viewModel;
+    }
+
+    private void UpdateViewModelRecipeId()
+    {
+        if (!string.IsNullOrEmpty(_recipeId) && int.TryParse(_recipeId, out int recipeIdInt))
+        {
+            Debug.WriteLine($"Setting RecipeId on ViewModel to {recipeIdInt}");
+
+            // Use Device.BeginInvokeOnMainThread to ensure this runs on the UI thread
+            MainThread.BeginInvokeOnMainThread(() => {
+                if (_viewModel.RecipeId != recipeIdInt)
+                {
+                    _viewModel.RecipeId = recipeIdInt;
+                }
+            });
+        }
+        else
+        {
+            Debug.WriteLine($"Invalid RecipeId: {_recipeId}");
+        }
     }
 
     protected override void OnAppearing()
@@ -21,19 +52,7 @@ public partial class RecipeDetailsPage : ContentPage
         base.OnAppearing();
 
         Debug.WriteLine("RecipeDetailsPage.OnAppearing");
-
-        if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeIdInt))
-        {
-            Debug.WriteLine($"Setting RecipeId to {recipeIdInt}");
-            if (_viewModel.RecipeId != recipeIdInt)
-            {
-                _viewModel.RecipeId = recipeIdInt;
-            }
-        }
-        else
-        {
-            Debug.WriteLine($"Invalid RecipeId: {RecipeId}");
-        }
+        UpdateViewModelRecipeId();
     }
 
     protected override void OnDisappearing()
