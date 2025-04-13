@@ -12,6 +12,32 @@ using Dikamon.Models;
 
 namespace Dikamon.ViewModels
 {
+    // Helper class for ingredients with comparison between required and available
+    public partial class IngredientViewModel : ObservableObject
+    {
+        [ObservableProperty]
+        private Items _item;
+
+        [ObservableProperty]
+        private int _quantity;
+
+        [ObservableProperty]
+        private int _availableQuantity;
+
+        [ObservableProperty]
+        private bool _hasEnough;
+    }
+
+    // Helper class for instruction steps
+    public partial class InstructionStepViewModel : ObservableObject
+    {
+        [ObservableProperty]
+        private int _stepNumber;
+
+        [ObservableProperty]
+        private string _description;
+    }
+
     [QueryProperty(nameof(RecipeId), "recipeId")]
     public partial class RecipeDetailsViewModel : ObservableObject
     {
@@ -358,21 +384,5 @@ namespace Dikamon.ViewModels
         {
             await Shell.Current.GoToAsync("..");
         }
-    }
-
-    // Helper class for ingredients with comparison between required and available
-    public class IngredientViewModel : ObservableObject
-    {
-        public Items Item { get; set; }
-        public int Quantity { get; set; }
-        public int AvailableQuantity { get; set; }
-        public bool HasEnough { get; set; }
-    }
-
-    // Helper class for instruction steps
-    public class InstructionStepViewModel : ObservableObject
-    {
-        public int StepNumber { get; set; }
-        public string Description { get; set; }
     }
 }

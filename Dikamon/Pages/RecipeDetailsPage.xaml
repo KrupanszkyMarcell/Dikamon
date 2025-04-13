@@ -81,7 +81,7 @@
                                   ItemsSource="{Binding Ingredients}"
                                   SelectionMode="None">
                         <CollectionView.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="vm:IngredientViewModel">
                                 <Border Margin="0,0,0,10"
                                        BackgroundColor="White"
                                        StrokeShape="RoundRectangle 8,8,8,8"
@@ -93,7 +93,7 @@
                                         <StackLayout Grid.Column="0"
                                                    Orientation="Horizontal"
                                                    Spacing="10">
-                                            <Image Source="{Binding Item.Image}"
+                                            <Image Source="{Binding Item.Image, Mode=OneWay}"
                                                   WidthRequest="30"
                                                   HeightRequest="30"
                                                   Aspect="AspectFit"
@@ -191,7 +191,7 @@
                                     Margin="0,0,0,10"
                                     SelectionMode="None">
                             <CollectionView.ItemTemplate>
-                                <DataTemplate>
+                                <DataTemplate x:DataType="vm:InstructionStepViewModel">
                                     <Border Margin="0,0,0,15"
                                            BackgroundColor="White"
                                            StrokeShape="RoundRectangle 10,10,10,10"
