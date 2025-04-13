@@ -66,7 +66,10 @@ namespace Dikamon.ViewModels
 
                     foreach (var type in response.Content)
                     {
-                        RecipeTypes.Add(type);
+                        if (!string.IsNullOrEmpty(type))
+                        {
+                            RecipeTypes.Add(type);
+                        }
                     }
 
                     SelectedRecipeType = "Mind"; // Default to "All"
@@ -122,71 +125,77 @@ namespace Dikamon.ViewModels
                 IsLoading = true;
 
                 // Get all recipes or filter by type
-                var response = SelectedRecipeType == "Mind" ?
+                var response = SelectedRecipeType == "Mind" || string.IsNullOrEmpty(SelectedRecipeType) ?
                     await _recipesApiCommand.GetRecipes() :
                     await _recipesApiCommand.GetRecipesByType(GetRecipeTypeCode(SelectedRecipeType));
 
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
-                    var allRecipes = response.Content;
+                    var allRecipes = response.Content ?? new List<Recipes>();
 
                     // Calculate pagination
-                    TotalPages = (int)Math.Ceiling((double)allRecipes.Count / ItemsPerPage);
-                    CurrentPage = Math.Min(CurrentPage, TotalPages);
-                    if (CurrentPage < 1) CurrentPage = 1;
+                    TotalPages = allRecipes.Count > 0 ?
+                        (int)Math.Ceiling((double)allRecipes.Count / Math.Max(1, ItemsPerPage)) : 1;
+                    CurrentPage = Math.Min(Math.Max(1, CurrentPage), Math.Max(1, TotalPages));
 
                     // Apply search filter if provided
                     if (!string.IsNullOrWhiteSpace(SearchText))
                     {
                         allRecipes = allRecipes.Where(r =>
-                            r.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                            r.Name_EN.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                            r.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                            r.Description_EN.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                            (r.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                            (r.Name_EN?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                            (r.Description?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                            (r.Description_EN?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false)
                         ).ToList();
 
                         // Recalculate pagination after filter
-                        TotalPages = (int)Math.Ceiling((double)allRecipes.Count / ItemsPerPage);
-                        CurrentPage = Math.Min(CurrentPage, TotalPages);
-                        if (CurrentPage < 1) CurrentPage = 1;
+                        TotalPages = allRecipes.Count > 0 ?
+                            (int)Math.Ceiling((double)allRecipes.Count / Math.Max(1, ItemsPerPage)) : 1;
+                        CurrentPage = Math.Min(Math.Max(1, CurrentPage), Math.Max(1, TotalPages));
                     }
 
-                    // Apply pagination
+                    // Apply pagination safely
+                    var skipCount = Math.Max(0, (CurrentPage - 1) * ItemsPerPage);
+                    var takeCount = Math.Max(1, ItemsPerPage);
+
                     var paginatedRecipes = allRecipes
-                        .Skip((CurrentPage - 1) * ItemsPerPage)
-                        .Take(ItemsPerPage)
+                        .Skip(skipCount)
+                        .Take(takeCount)
                         .ToList();
 
                     Recipes.Clear();
                     foreach (var recipe in paginatedRecipes)
                     {
+                        // Ensure all string properties are non-null
+                        recipe.Name = recipe.Name ?? string.Empty;
+                        recipe.Name_EN = recipe.Name_EN ?? string.Empty;
+                        recipe.Description = recipe.Description ?? string.Empty;
+                        recipe.Description_EN = recipe.Description_EN ?? string.Empty;
+                        recipe.Type = recipe.Type ?? string.Empty;
+                        recipe.Image = recipe.Image ?? string.Empty;
+
                         Recipes.Add(recipe);
                     }
 
                     Debug.WriteLine($"Loaded {Recipes.Count} recipes (Page {CurrentPage} of {TotalPages})");
-
-                    // Notify that the CanGoToNextPage property may have changed
-                    OnPropertyChanged(nameof(CanGoToNextPage));
                 }
                 else
                 {
                     Debug.WriteLine($"Failed to load recipes: {response.Error?.Content}");
-
-                    // Fallback to hardcoded recipes if the API fails
                     LoadFallbackRecipes();
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading recipes: {ex.Message}");
-
-                // Fallback to hardcoded recipes
                 LoadFallbackRecipes();
             }
             finally
             {
                 IsLoading = false;
                 IsRefreshing = false;
+                // Make sure to notify for CanGoToNextPage
+                OnPropertyChanged(nameof(CanGoToNextPage));
             }
         }
 
@@ -244,14 +253,45 @@ namespace Dikamon.ViewModels
 
         partial void OnCurrentPageChanged(int value)
         {
-            // When current page changes, we need to notify that CanGoToNextPage might have changed
-            OnPropertyChanged(nameof(CanGoToNextPage));
+            try
+            {
+                // When current page changes, we need to notify that CanGoToNextPage might have changed
+                OnPropertyChanged(nameof(CanGoToNextPage));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnCurrentPageChanged: {ex.Message}");
+            }
         }
 
         partial void OnTotalPagesChanged(int value)
         {
-            // When total pages changes, we need to notify that CanGoToNextPage might have changed
-            OnPropertyChanged(nameof(CanGoToNextPage));
+            try
+            {
+                // When total pages changes, we need to notify that CanGoToNextPage might have changed
+                OnPropertyChanged(nameof(CanGoToNextPage));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnTotalPagesChanged: {ex.Message}");
+            }
+        }
+
+        partial void OnSelectedRecipeTypeChanged(string value)
+        {
+            try
+            {
+                // When selected recipe type changes, we may want to reload recipes
+                // but we don't want to trigger this on initialization
+                if (!IsLoading && !string.IsNullOrEmpty(value))
+                {
+                    Debug.WriteLine($"Selected recipe type changed to: {value}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in OnSelectedRecipeTypeChanged: {ex.Message}");
+            }
         }
 
         [RelayCommand]
@@ -271,8 +311,16 @@ namespace Dikamon.ViewModels
         [RelayCommand]
         private async Task FilterRecipesByType()
         {
-            CurrentPage = 1; // Reset to first page when changing filter
-            await LoadRecipesAsync();
+            try
+            {
+                Debug.WriteLine($"Filtering recipes by type: {SelectedRecipeType}");
+                CurrentPage = 1; // Reset to first page when changing filter
+                await LoadRecipesAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error filtering recipes by type: {ex.Message}");
+            }
         }
 
         [RelayCommand]
@@ -301,18 +349,33 @@ namespace Dikamon.ViewModels
             if (recipe == null)
                 return;
 
-            // Navigate to recipe details page
-            var navigationParameter = new Dictionary<string, object>
+            try
             {
-                { "recipeId", recipe.Id.ToString() }
-            };
+                // For now, just display an alert with the recipe details
+                await Application.Current.MainPage.DisplayAlert(
+                    recipe.Name,
+                    $"Leírás: {recipe.Description}\nIdő: {recipe.Time} perc\nNehézség: {recipe.Difficulty}/5",
+                    "OK");
 
-            // await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+                // Later you can implement the navigation to recipe details page:
+                // var navigationParameter = new Dictionary<string, object>
+                // {
+                //     { "recipeId", recipe.Id.ToString() }
+                // };
+                // await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error viewing recipe details: {ex.Message}");
+            }
         }
 
         // Helper method to convert recipe type name to code
         private string GetRecipeTypeCode(string typeName)
         {
+            if (string.IsNullOrEmpty(typeName) || typeName == "Mind")
+                return "";
+
             return typeName switch
             {
                 "Reggeli" => "REG",
@@ -322,7 +385,7 @@ namespace Dikamon.ViewModels
                 "Magyaros" => "HUN",
                 "Mexikói" => "MEX",
                 "Desszert" => "DES",
-                _ => ""
+                _ => ""  // Default to empty string for unknown types
             };
         }
     }

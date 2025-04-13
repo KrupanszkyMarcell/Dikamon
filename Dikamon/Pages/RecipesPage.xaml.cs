@@ -29,6 +29,12 @@ namespace Dikamon.Pages
         {
             if (_viewModel != null)
             {
+                // Make sure SelectedRecipeType is updated before filtering
+                if (sender is Picker picker && picker.SelectedItem is string selectedType)
+                {
+                    _viewModel.SelectedRecipeType = selectedType;
+                }
+
                 // Reset to page 1 when filter changes
                 _viewModel.CurrentPage = 1;
                 _viewModel.FilterRecipesByTypeCommand.Execute(null);
