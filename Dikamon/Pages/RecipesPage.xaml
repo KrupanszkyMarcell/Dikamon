@@ -10,6 +10,7 @@
 
     <ContentPage.Resources>
         <services:ImageSourceConverter x:Key="ImageSourceConverter" />
+        <services:GreaterThanOneConverter x:Key="GreaterThanOneConverter" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*"

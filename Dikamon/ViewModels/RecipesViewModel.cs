@@ -39,6 +39,9 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         private int _itemsPerPage = 3;
 
+        // Add the missing property that's used in RecipesPage.xaml
+        public bool CanGoToNextPage => CurrentPage < TotalPages;
+
         public RecipesViewModel(IRecipesApiCommand recipesApiCommand)
         {
             _recipesApiCommand = recipesApiCommand;
@@ -161,6 +164,9 @@ namespace Dikamon.ViewModels
                     }
 
                     Debug.WriteLine($"Loaded {Recipes.Count} recipes (Page {CurrentPage} of {TotalPages})");
+
+                    // Notify that the CanGoToNextPage property may have changed
+                    OnPropertyChanged(nameof(CanGoToNextPage));
                 }
                 else
                 {
@@ -231,6 +237,21 @@ namespace Dikamon.ViewModels
 
             TotalPages = 1;
             CurrentPage = 1;
+
+            // Notify that the CanGoToNextPage property may have changed
+            OnPropertyChanged(nameof(CanGoToNextPage));
+        }
+
+        partial void OnCurrentPageChanged(int value)
+        {
+            // When current page changes, we need to notify that CanGoToNextPage might have changed
+            OnPropertyChanged(nameof(CanGoToNextPage));
+        }
+
+        partial void OnTotalPagesChanged(int value)
+        {
+            // When total pages changes, we need to notify that CanGoToNextPage might have changed
+            OnPropertyChanged(nameof(CanGoToNextPage));
         }
 
         [RelayCommand]
@@ -286,7 +307,7 @@ namespace Dikamon.ViewModels
                 { "recipeId", recipe.Id.ToString() }
             };
 
-           // await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+            // await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
         }
 
         // Helper method to convert recipe type name to code

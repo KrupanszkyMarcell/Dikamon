@@ -148,9 +148,10 @@ namespace Dikamon
             builder.Services.AddSingleton<InvertedBoolConverter>();
             builder.Services.AddSingleton<StringNotEmptyConverter>();
             builder.Services.AddSingleton<Services.ImageSourceConverter>();
+            builder.Services.AddSingleton<GreaterThanOneConverter>();
 
-                        // Register routes
-                        Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
+            // Register routes
+            Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
             Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));
             Routing.RegisterRoute(nameof(AfterLoginMainPage), typeof(AfterLoginMainPage));
