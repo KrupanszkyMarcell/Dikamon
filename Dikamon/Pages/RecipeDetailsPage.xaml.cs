@@ -1,4 +1,5 @@
 using Dikamon.ViewModels;
+using System.Diagnostics;
 
 namespace Dikamon.Pages;
 
@@ -22,12 +23,13 @@ public partial class RecipeDetailsPage : ContentPage
         // Pass the recipeId to the ViewModel
         if (!string.IsNullOrEmpty(RecipeId) && int.TryParse(RecipeId, out int recipeId))
         {
-            System.Diagnostics.Debug.WriteLine($"Setting RecipeId in ViewModel to: {recipeId}");
+            Debug.WriteLine($"RecipeDetailsPage: Setting RecipeId in ViewModel to: {recipeId}");
             _viewModel.RecipeId = recipeId;
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"Invalid RecipeId: {RecipeId}");
+            Debug.WriteLine($"RecipeDetailsPage: Invalid RecipeId: {RecipeId}");
+            DisplayAlert("Hiba", "Érvénytelen recept azonosító", "OK");
         }
     }
 }

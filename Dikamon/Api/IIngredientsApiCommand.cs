@@ -10,11 +10,11 @@ namespace Dikamon.Api
 {
     public interface IIngredientsApiCommand
     {
-        [Get("ingredients/{id}")]
+        [Get("/ingredients/{id}")]
         Task<ApiResponse<List<Contains>>> GetIngredientsById(int id);
-        [Delete("ingredients/{id}")]
+        [Delete("/ingredients/{id}")]
         Task DeleteIngredient(int id);
-        [Post("ingredients")]
+        [Post("/ingredients")]
         Task<ApiResponse<Contains>> AddIngredient([Body] Contains ingredient);
     }
 }

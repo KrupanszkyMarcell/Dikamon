@@ -368,22 +368,24 @@ namespace Dikamon.ViewModels
 
             try
             {
-                // For now, just display an alert with the recipe details
-                await Application.Current.MainPage.DisplayAlert(
-                    recipe.Name,
-                    $"Leírás: {recipe.Description}\nIdő: {recipe.Time} perc\nNehézség: {recipe.Difficulty}/5",
-                    "OK");
+                Debug.WriteLine($"Navigating to recipe details for recipe ID: {recipe.Id}");
 
-                // Later you can implement the navigation to recipe details page:
-                // var navigationParameter = new Dictionary<string, object>
-                // {
-                //     { "recipeId", recipe.Id.ToString() }
-                // };
-                // await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
+                // Create navigation parameters with the recipe ID
+                var navigationParameter = new Dictionary<string, object>
+                {
+                    { "recipeId", recipe.Id.ToString() }
+                };
+
+                // Navigate to the RecipeDetailsPage
+                await Shell.Current.GoToAsync(nameof(RecipeDetailsPage), navigationParameter);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error viewing recipe details: {ex.Message}");
+                await Application.Current.MainPage.DisplayAlert(
+                    "Hiba",
+                    $"Nem sikerült megnyitni a recept részleteit: {ex.Message}",
+                    "OK");
             }
         }
     }
