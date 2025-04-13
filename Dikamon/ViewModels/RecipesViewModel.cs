@@ -47,16 +47,14 @@ namespace Dikamon.ViewModels
             _recipesApiCommand = recipesApiCommand;
             Recipes = new ObservableCollection<Recipes>();
             RecipeTypes = new ObservableCollection<string>();
-
-            // Don't automatically load on constructor - we'll do this in the page's OnAppearing
-            // LoadRecipeTypesAsync();
-            // LoadRecipesAsync();
         }
 
+        [RelayCommand]
         private async Task LoadRecipeTypesAsync()
         {
             try
             {
+                Debug.WriteLine("Loading recipe types...");
                 var response = await _recipesApiCommand.GetRecipeTypes();
 
                 if (response.IsSuccessStatusCode && response.Content != null)
@@ -68,17 +66,22 @@ namespace Dikamon.ViewModels
                     {
                         if (!string.IsNullOrEmpty(type))
                         {
+                            Debug.WriteLine($"Adding recipe type: {type}");
                             RecipeTypes.Add(type);
                         }
                     }
 
-                    SelectedRecipeType = "Mind"; // Default to "All"
-                    Debug.WriteLine($"Loaded {RecipeTypes.Count} recipe types");
+                    // Only set default if it's not already set
+                    if (string.IsNullOrEmpty(SelectedRecipeType))
+                    {
+                        SelectedRecipeType = "Mind"; // Default to "All"
+                    }
+
+                    Debug.WriteLine($"Loaded {RecipeTypes.Count} recipe types, selected type: {SelectedRecipeType}");
                 }
                 else
                 {
                     Debug.WriteLine($"Failed to load recipe types: {response.Error?.Content}");
-
                     // Fallback to hardcoded types if the API fails
                     LoadFallbackRecipeTypes();
                 }
@@ -86,7 +89,6 @@ namespace Dikamon.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error loading recipe types: {ex.Message}");
-
                 // Fallback to hardcoded types
                 LoadFallbackRecipeTypes();
             }
@@ -99,19 +101,23 @@ namespace Dikamon.ViewModels
             RecipeTypes.Clear();
 
             RecipeTypes.Add("Mind");
-            RecipeTypes.Add("Reggeli");
-            RecipeTypes.Add("Amerikai");
-            RecipeTypes.Add("Ázsiai");
-            RecipeTypes.Add("Olasz");
-            RecipeTypes.Add("Magyaros");
-            RecipeTypes.Add("Mexikói");
-            RecipeTypes.Add("Desszert");
+            RecipeTypes.Add("REG"); // Using actual type codes
+            RecipeTypes.Add("AME");
+            RecipeTypes.Add("ASI");
+            RecipeTypes.Add("ITA");
+            RecipeTypes.Add("HUN");
+            RecipeTypes.Add("MEX");
+            RecipeTypes.Add("DES");
 
-            SelectedRecipeType = "Mind"; // Default to "All"
+            // Only set default if it's not already set
+            if (string.IsNullOrEmpty(SelectedRecipeType))
+            {
+                SelectedRecipeType = "Mind"; // Default to "All"
+            }
         }
 
         [RelayCommand]
-        private async Task LoadRecipesAsync()
+        public async Task LoadRecipesAsync()
         {
             if (IsLoading)
                 return;
@@ -119,15 +125,18 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
-                Debug.WriteLine("Started loading recipes");
+                Debug.WriteLine($"Started loading recipes with type filter: {SelectedRecipeType}");
 
                 // Clear the collection first so the UI updates immediately
                 Recipes.Clear();
 
                 // Get all recipes or filter by type
-                var response = SelectedRecipeType == "Mind" || string.IsNullOrEmpty(SelectedRecipeType) ?
+                var typeFilter = SelectedRecipeType == "Mind" ? "" : SelectedRecipeType;
+                Debug.WriteLine($"Using type filter for API: '{typeFilter}'");
+
+                var response = string.IsNullOrEmpty(typeFilter) ?
                     await _recipesApiCommand.GetRecipes() :
-                    await _recipesApiCommand.GetRecipesByType(GetRecipeTypeCode(SelectedRecipeType));
+                    await _recipesApiCommand.GetRecipesByType(typeFilter);
 
                 Debug.WriteLine($"Recipe API response successful: {response.IsSuccessStatusCode}");
 
@@ -141,6 +150,10 @@ namespace Dikamon.ViewModels
                 else
                 {
                     Debug.WriteLine($"Failed to load recipes: {response.Error?.Content}");
+                    if (response.Error != null)
+                    {
+                        Debug.WriteLine($"Error details: {response.Error.Content}");
+                    }
                     LoadFallbackRecipes();
                     return;
                 }
@@ -159,12 +172,14 @@ namespace Dikamon.ViewModels
                 // Apply search filter if provided
                 if (!string.IsNullOrWhiteSpace(SearchText))
                 {
+                    Debug.WriteLine($"Applying search filter: {SearchText}");
                     allRecipes = allRecipes.Where(r =>
                         (r.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         (r.Name_EN?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         (r.Description?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         (r.Description_EN?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false)
                     ).ToList();
+                    Debug.WriteLine($"After search filter: {allRecipes.Count} recipes");
 
                     // Recalculate pagination after filter
                     TotalPages = allRecipes.Count > 0 ?
@@ -196,7 +211,7 @@ namespace Dikamon.ViewModels
                     recipe.Type = recipe.Type ?? string.Empty;
                     recipe.Image = recipe.Image ?? string.Empty;
 
-                    Debug.WriteLine($"Adding recipe: {recipe.Name}");
+                    Debug.WriteLine($"Adding recipe: {recipe.Name} (Type: {recipe.Type})");
                     Recipes.Add(recipe);
                 }
 
@@ -286,11 +301,12 @@ namespace Dikamon.ViewModels
 
         partial void OnSelectedRecipeTypeChanged(string value)
         {
-            // When selected recipe type changes, we may want to reload recipes
+            // When selected recipe type changes, we should reload recipes
             // but we don't want to trigger this on initialization
             if (!IsLoading && !string.IsNullOrEmpty(value))
             {
                 Debug.WriteLine($"Selected recipe type changed to: {value}");
+                FilterRecipesByTypeCommand.ExecuteAsync(null);
             }
         }
 
@@ -298,10 +314,8 @@ namespace Dikamon.ViewModels
         private async Task RefreshAsync()
         {
             IsRefreshing = true;
-            await Task.WhenAll(
-                LoadRecipeTypesAsync(),
-                LoadRecipesAsync()
-            );
+            await LoadRecipeTypesAsync();
+            await LoadRecipesAsync();
         }
 
         [RelayCommand]
@@ -371,25 +385,6 @@ namespace Dikamon.ViewModels
             {
                 Debug.WriteLine($"Error viewing recipe details: {ex.Message}");
             }
-        }
-
-        // Helper method to convert recipe type name to code
-        private string GetRecipeTypeCode(string typeName)
-        {
-            if (string.IsNullOrEmpty(typeName) || typeName == "Mind")
-                return "";
-
-            return typeName switch
-            {
-                "Reggeli" => "REG",
-                "Amerikai" => "AME",
-                "Ázsiai" => "ASI",
-                "Olasz" => "ITA",
-                "Magyaros" => "HUN",
-                "Mexikói" => "MEX",
-                "Desszert" => "DES",
-                _ => ""  // Default to empty string for unknown types
-            };
         }
     }
 }
