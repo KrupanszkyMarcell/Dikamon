@@ -14,14 +14,16 @@ namespace Dikamon.Pages
             this.BindingContext = viewModel;
         }
 
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
 
             // Refresh data when page appears
             if (_viewModel != null)
             {
-                _viewModel.RefreshCommand.Execute(null);
+                Debug.WriteLine("RecipesPage appeared, triggering refresh");
+                await _viewModel.RefreshCommand.ExecuteAsync(null);
+                Debug.WriteLine("RefreshCommand completed");
             }
         }
 
@@ -33,6 +35,7 @@ namespace Dikamon.Pages
                 if (sender is Picker picker && picker.SelectedItem is string selectedType)
                 {
                     _viewModel.SelectedRecipeType = selectedType;
+                    Debug.WriteLine($"Recipe type picker changed to: {selectedType}");
                 }
 
                 // Reset to page 1 when filter changes

@@ -11,6 +11,8 @@
     <ContentPage.Resources>
         <services:ImageSourceConverter x:Key="ImageSourceConverter" />
         <services:GreaterThanOneConverter x:Key="GreaterThanOneConverter" />
+        <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        <services:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*"
@@ -103,18 +105,11 @@
         <Grid Grid.Row="1" 
               RowDefinitions="*,Auto">
 
-            <!-- Loading indicator -->
-            <ActivityIndicator IsRunning="{Binding IsLoading}"
-                              IsVisible="{Binding IsLoading}"
-                              HorizontalOptions="Center"
-                              VerticalOptions="Center"
-                              Color="#FFEE58"
-                              Scale="2"/>
-
-            <!-- Recipe Items -->
+            <!-- Recipe Items visible when not loading -->
             <RefreshView Grid.Row="0"
                         IsRefreshing="{Binding IsRefreshing}" 
-                        Command="{Binding RefreshCommand}">
+                        Command="{Binding RefreshCommand}"
+                        IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
                 <CollectionView ItemsSource="{Binding Recipes}"
                               EmptyView="Nem találhatóak adatok!">
                     <CollectionView.ItemTemplate>
@@ -199,6 +194,14 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </RefreshView>
+
+            <!-- Loading indicator - on top when visible -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                              IsVisible="{Binding IsLoading}"
+                              HorizontalOptions="Center"
+                              VerticalOptions="Center"
+                              Color="#FFEE58"
+                              Scale="2"/>
 
             <!-- Pagination controls -->
             <Grid Grid.Row="1" 
