@@ -15,7 +15,6 @@ public partial class RecipeDetailsPage : ContentPage
         set
         {
             _recipeId = value;
-            Debug.WriteLine($"RecipeId property set to: {value}");
             UpdateViewModelRecipeId();
         }
     }
@@ -31,9 +30,6 @@ public partial class RecipeDetailsPage : ContentPage
     {
         if (!string.IsNullOrEmpty(_recipeId) && int.TryParse(_recipeId, out int recipeIdInt))
         {
-            Debug.WriteLine($"Setting RecipeId on ViewModel to {recipeIdInt}");
-
-            // Use Device.BeginInvokeOnMainThread to ensure this runs on the UI thread
             MainThread.BeginInvokeOnMainThread(() => {
                 if (_viewModel.RecipeId != recipeIdInt)
                 {
@@ -41,23 +37,16 @@ public partial class RecipeDetailsPage : ContentPage
                 }
             });
         }
-        else
-        {
-            Debug.WriteLine($"Invalid RecipeId: {_recipeId}");
-        }
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        Debug.WriteLine("RecipeDetailsPage.OnAppearing");
         UpdateViewModelRecipeId();
     }
 
     protected override void OnDisappearing()
     {
-        Debug.WriteLine("RecipeDetailsPage.OnDisappearing");
         base.OnDisappearing();
     }
 }

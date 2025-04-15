@@ -78,12 +78,11 @@ namespace Dikamon.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
             }
             finally
             {
-                IsLoading = false; // Hide loading indicator
+                IsLoading = false; 
             }
         }
 

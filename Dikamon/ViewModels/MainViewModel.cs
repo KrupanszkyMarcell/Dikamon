@@ -21,8 +21,6 @@ namespace Dikamon.ViewModels
         public MainViewModel(ITokenService tokenService = null)
         {
             _tokenService = tokenService;
-
-            // Start checking for previous login
             Task.Run(async () => await CheckForStoredCredentialsAsync());
         }
 
@@ -31,9 +29,6 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
-                Debug.WriteLine("Checking for stored credentials...");
-
-                // Add a small delay to ensure the loading indicator is visible
                 await Task.Delay(1000);
 
                 if (_tokenService != null)
@@ -42,14 +37,10 @@ namespace Dikamon.ViewModels
 
                     if (isValid)
                     {
-                        Debug.WriteLine("Valid token found, navigating to main app page");
                         await Shell.Current.GoToAsync("//AfterLoginMainPage", true);
-                        return; // Exit early as we're navigating away
+                        return; 
                     }
-                    else
-                    {
-                        Debug.WriteLine("No valid token found with token service");
-                    }
+
                 }
                 else
                 {
@@ -59,25 +50,17 @@ namespace Dikamon.ViewModels
 
                     if (!string.IsNullOrEmpty(token) && !string.IsNullOrEmpty(userJson))
                     {
-                        Debug.WriteLine("Credentials found in secure storage, attempting navigation");
                         await Shell.Current.GoToAsync("//AfterLoginMainPage", true);
-                        return; // Exit early as we're navigating away
-                    }
-                    else
-                    {
-                        Debug.WriteLine("No valid credentials found in secure storage");
+                        return; 
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error checking for stored credentials: {ex.Message}");
             }
             finally
             {
-                // Only hide the loading indicator if we're still on this page
                 IsLoading = false;
-                Debug.WriteLine("Finished checking credentials, loading state set to false");
             }
         }
 

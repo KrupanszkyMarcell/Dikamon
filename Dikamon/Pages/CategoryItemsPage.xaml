@@ -16,8 +16,6 @@
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
           Padding="20">
-
-        <!-- Header -->
         <StackLayout Grid.Row="0" 
                     Orientation="Horizontal" 
                     HorizontalOptions="Start"
@@ -31,20 +29,14 @@
                   FontSize="24"
                   VerticalOptions="Center" />
         </StackLayout>
-
-        <!-- Main content -->
         <Grid Grid.Row="1" 
              RowDefinitions="Auto,Auto,*,Auto">
-
-            <!-- Category Title -->
             <Label Grid.Row="0"
                   Text="{Binding CategoryName}" 
                   FontFamily="Tiny5" 
                   FontSize="28" 
                   HorizontalOptions="Center"
                   Margin="0,0,0,15"/>
-
-            <!-- Search Bar -->
             <Frame Grid.Row="1"
                   BackgroundColor="White" 
                   CornerRadius="10" 
@@ -67,10 +59,7 @@
                            VerticalOptions="Center" />
                 </Grid>
             </Frame>
-
-            <!-- Items List with loading indicator -->
             <Grid Grid.Row="2">
-                <!-- Loading indicator -->
                 <ActivityIndicator IsRunning="{Binding IsLoading}"
                                  IsVisible="{Binding IsLoading}"
                                  HorizontalOptions="Center"
@@ -81,7 +70,6 @@
                             Command="{Binding RefreshCommand}"
                             IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
                     <CollectionView ItemsSource="{Binding CategoryItems}">
-                        <!-- Empty view template -->
                         <CollectionView.EmptyView>
                             <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
                                 <Image Source="empty_box.png" HeightRequest="100" WidthRequest="100" Opacity="0.6" />
@@ -97,7 +85,6 @@
                                       HorizontalTextAlignment="Center" />
                             </StackLayout>
                         </CollectionView.EmptyView>
-
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="model:Stores">
                                 <Frame Margin="0,5" 
@@ -107,7 +94,6 @@
                                       HasShadow="False">
                                     <Grid ColumnDefinitions="Auto,*,Auto" 
                                          RowDefinitions="Auto,Auto">
-                                        <!-- Item Image -->
                                         <Image Grid.Row="0" 
                                               Grid.RowSpan="2" 
                                               Grid.Column="0"
@@ -116,15 +102,11 @@
                                               HeightRequest="60"
                                               Margin="0,0,10,0"
                                               Aspect="AspectFit"/>
-
-                                        <!-- Item Name -->
                                         <Label Grid.Row="0" 
                                               Grid.Column="1"
                                               Text="{Binding StoredItem.Name}" 
                                               FontAttributes="Bold" 
                                               FontSize="16"/>
-
-                                        <!-- Item Quantity with unit - Using MultiBinding -->
                                         <Label Grid.Row="1" 
                                               Grid.Column="1"
                                               TextColor="Gray"
@@ -136,8 +118,6 @@
                                                 </MultiBinding>
                                             </Label.Text>
                                         </Label>
-
-                                        <!-- Control Buttons -->
                                         <StackLayout Grid.Row="0" 
                                                     Grid.RowSpan="2" 
                                                     Grid.Column="2" 
@@ -169,8 +149,6 @@
                     </CollectionView>
                 </RefreshView>
             </Grid>
-
-            <!-- Add Button -->
             <Button Grid.Row="3"
                    Text="Új termék hozzáadása" 
                    BackgroundColor="#FFEE58" 

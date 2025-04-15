@@ -17,11 +17,8 @@ public partial class MyKitchenPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        // Refresh data when the page appears
         if (_viewModel != null)
         {
-            Debug.WriteLine("MyKitchenPage appeared, triggering refresh");
             _viewModel.RefreshCommand.Execute(null);
         }
     }

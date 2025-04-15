@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Dikamon.Services
 {
-    // Converter to invert boolean values
+
     public class InvertedBoolConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -25,7 +25,7 @@ namespace Dikamon.Services
         }
     }
 
-    // Converter to check if a string is not empty
+
     public class StringNotEmptyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

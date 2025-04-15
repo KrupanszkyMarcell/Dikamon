@@ -25,10 +25,7 @@ namespace Dikamon
                     fonts.AddFont("Tiny5-Regular.ttf", "Tiny5");
                 });
 
-            // Register services and handlers
-            // Register the token service first since other services depend on it
             builder.Services.AddSingleton<ITokenService, TokenService>();
-
             builder.Services.AddTransient<CustomUserResponseHandler>();
             builder.Services.AddTransient<CustomAuthenticatedHttpClientHandler>(sp =>
             {
@@ -39,11 +36,7 @@ namespace Dikamon
                 );
                 return handler;
             });
-
-            // Configure HTTP Client
             var apiBaseUrl = "https://dkapbackend-cre8fwf4hdejhtdq.germanywestcentral-01.azurewebsites.net/api";
-
-            // Register API clients
             builder.Services.AddRefitClient<IUserApiCommand>()
                 .ConfigureHttpClient(async (sp, client) =>
                 {
@@ -122,8 +115,6 @@ namespace Dikamon
                     }
                 })
                 .AddHttpMessageHandler<CustomAuthenticatedHttpClientHandler>(); ;
-
-            // Register pages and view models
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<MainViewModel>();
             builder.Services.AddTransient<LoginPage>();
@@ -140,12 +131,10 @@ namespace Dikamon
             builder.Services.AddTransient<RecipesViewModel>();
             builder.Services.AddTransient<RecipeDetailsPage>();
             builder.Services.AddTransient<RecipeDetailsViewModel>();
-
-            // Register NewItemPage and NewItemViewModel
             builder.Services.AddTransient<NewItemPage>();
             builder.Services.AddTransient<NewItemViewModel>();
 
-            // Register converters
+
             builder.Services.AddSingleton<QuantityToTextConverter>();
             builder.Services.AddSingleton<InvertedBoolConverter>();
             builder.Services.AddSingleton<StringNotEmptyConverter>();
@@ -154,7 +143,7 @@ namespace Dikamon
             builder.Services.AddSingleton<BoolToColorConverter>();
             builder.Services.AddSingleton<ColorConverter>();
 
-            // Register routes
+
             Routing.RegisterRoute(nameof(LoginPage), typeof(LoginPage));
             Routing.RegisterRoute(nameof(RegisterPage), typeof(RegisterPage));
             Routing.RegisterRoute(nameof(MyKitchenPage), typeof(MyKitchenPage));

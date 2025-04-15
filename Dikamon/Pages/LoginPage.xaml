@@ -11,8 +11,6 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto"
       Padding="20">
-
-        <!-- Header with logo and title -->
         <StackLayout Grid.Row="0" 
                  Orientation="Horizontal" 
                  HorizontalOptions="Start"
@@ -26,8 +24,6 @@
                FontSize="24"
                VerticalOptions="Center" />
         </StackLayout>
-
-        <!-- Loading Indicator -->
         <ActivityIndicator Grid.Row="1" 
                          IsRunning="{Binding IsLoading}"
                          IsVisible="{Binding IsLoading}"
@@ -35,14 +31,10 @@
                          VerticalOptions="Center"
                          Color="#AD9163"
                          Scale="2" />
-
-        <!-- Main content area - visible when not loading -->
         <Grid Grid.Row="1" 
           RowDefinitions="Auto,*,Auto"
           Margin="0,5"
           IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
-
-            <!-- Title text -->
             <StackLayout Grid.Row="0" 
                      Spacing="10" 
                      Margin="0,20">
@@ -58,8 +50,6 @@
                    HorizontalOptions="Center"
                    HorizontalTextAlignment="Center" />
             </StackLayout>
-
-            <!-- Login form -->
             <Frame Grid.Row="1" 
                CornerRadius="10" 
                HasShadow="False" 
@@ -67,9 +57,7 @@
                BackgroundColor="White"
                VerticalOptions="Center"
                Margin="0,30,0,0">
-
                 <StackLayout Spacing="5">
-                    <!-- Email input -->
                     <StackLayout Spacing="10">
                         <Label Text="Email cím" 
                            FontFamily="Tiny5"
@@ -86,8 +74,6 @@
                             </VerticalStackLayout>
                         </Frame>
                     </StackLayout>
-
-                    <!-- Password input with visibility toggle -->
                     <StackLayout Spacing="5">
                         <Label Text="Jelszó" 
                            FontFamily="Tiny5"
@@ -112,9 +98,6 @@
                             </Grid>
                         </Frame>
                     </StackLayout>
-
-
-                    <!-- Login button -->
                     <Button Text="Bejelentkezés" 
                         FontFamily="Tiny5" 
                         BackgroundColor="#FFEE58" 
@@ -126,8 +109,6 @@
 
                 </StackLayout>
             </Frame>
-
-            <!-- Register link -->
             <StackLayout Grid.Row="2" 
                      Orientation="Horizontal" 
                      HorizontalOptions="Center"
@@ -148,8 +129,6 @@
                 </Label>
             </StackLayout>
         </Grid>
-
-        <!-- Footer -->
         <Label Grid.Row="2" 
            Text="© 2025 Dikamon" 
            FontSize="12" 

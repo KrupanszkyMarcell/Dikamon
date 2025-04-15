@@ -62,8 +62,6 @@ namespace Dikamon.ViewModels
         {
             if (value && _isInitialized)
             {
-                // Refresh data when coming back from another page
-                System.Diagnostics.Debug.WriteLine("Refresh required detected, reloading data...");
                 LoadCategoryItemsAsync().ConfigureAwait(false);
             }
         }
@@ -72,22 +70,14 @@ namespace Dikamon.ViewModels
         {
             if (_isInitialized && categoryName == CategoryName && categoryId == CategoryId)
             {
-                System.Diagnostics.Debug.WriteLine($"Already initialized with the same category: {categoryName}, {categoryId}");
                 return;
             }
-
-            System.Diagnostics.Debug.WriteLine($"Initializing CategoryItemsViewModel with category: {categoryName}, id: {categoryId}");
-
             CategoryName = categoryName;
             CategoryId = categoryId;
-
             _isInitialized = false;
-
             await LoadUserIdAsync();
-
             if (_userId == 0)
             {
-                System.Diagnostics.Debug.WriteLine("Failed to load user ID, cannot proceed with initialization");
                 await Application.Current.MainPage.DisplayAlert("Figyelmeztetés", "A felhasználói adatok betöltése sikertelen. Kérjük, jelentkezzen be újra.", "OK");
                 return;
             }
@@ -104,10 +94,8 @@ namespace Dikamon.ViewModels
         {
             try
             {
-                // Try to get user directly from SecureStorage
-                var userJson = await SecureStorage.GetAsync("user");
-                System.Diagnostics.Debug.WriteLine($"User JSON from secure storage: {(userJson != null ? "Retrieved" : "Not found")}");
 
+                var userJson = await SecureStorage.GetAsync("user");
                 if (!string.IsNullOrEmpty(userJson))
                 {
                     try
@@ -116,35 +104,23 @@ namespace Dikamon.ViewModels
                         if (user != null && user.Id.HasValue)
                         {
                             _userId = user.Id.Value;
-                            System.Diagnostics.Debug.WriteLine($"User ID loaded: {_userId}");
                             return;
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("User or User.Id is null after deserialization");
                         }
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Error deserializing user JSON: {ex.Message}");
                     }
                 }
 
-                // Fallback: Try to get user ID from a different source if available
+
                 var userIdStr = await SecureStorage.GetAsync("userId");
                 if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
                 {
                     _userId = userId;
-                    System.Diagnostics.Debug.WriteLine($"User ID loaded from userId key: {_userId}");
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("Failed to load user ID from any source");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading user ID: {ex.Message}");
             }
         }
 
@@ -156,30 +132,21 @@ namespace Dikamon.ViewModels
 
             if (_userId == 0)
             {
-                System.Diagnostics.Debug.WriteLine("Cannot load category items: User ID is 0");
                 return;
             }
 
             if (CategoryId == 0)
             {
-                System.Diagnostics.Debug.WriteLine("Cannot load category items: Category ID is 0");
                 return;
             }
 
             try
             {
                 IsLoading = true;
-                System.Diagnostics.Debug.WriteLine($"Loading stored items for user {_userId} and category {CategoryId}");
-
-                // First try to get stored items filtered by category type
                 var response = await _storedItemsApiCommand.GetStoredItemsByTypeId(_userId, CategoryId);
-
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     CategoryItems.Clear();
-                    System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} items");
-
-                    // First load available items for this category to have a reference
                     if (AvailableItems.Count == 0)
                     {
                         await LoadAvailableItemsAsync();
@@ -187,22 +154,19 @@ namespace Dikamon.ViewModels
 
                     foreach (var item in response.Content)
                     {
-                        // Make sure the StoredItem property is populated
+
                         if (item.StoredItem == null && item.ItemId > 0)
                         {
-                            System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to load item details");
                             try
                             {
-                                // First check if we already have the item in AvailableItems
                                 var matchingAvailableItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
                                 if (matchingAvailableItem != null)
                                 {
                                     item.StoredItem = matchingAvailableItem;
-                                    System.Diagnostics.Debug.WriteLine($"Populated item details from AvailableItems for ID {item.ItemId}");
                                 }
                                 else
                                 {
-                                    // If not found in available items, try to get it from API
+
                                     var itemsResponse = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
                                     if (itemsResponse.IsSuccessStatusCode && itemsResponse.Content != null)
                                     {
@@ -210,49 +174,37 @@ namespace Dikamon.ViewModels
                                         if (matchingItem != null)
                                         {
                                             item.StoredItem = matchingItem;
-                                            System.Diagnostics.Debug.WriteLine($"Populated item details from API for ID {item.ItemId}");
                                         }
                                     }
                                 }
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"Error loading item details: {ex.Message}");
                             }
                         }
 
-                        // Ensure Unit property is set to a non-null value
+
                         if (item.StoredItem != null)
                         {
-                            // If the Unit is null, set a default value
+
                             if (string.IsNullOrEmpty(item.StoredItem.Unit))
                             {
                                 item.StoredItem.Unit = "db";
-                                System.Diagnostics.Debug.WriteLine($"Set default unit 'db' for item {item.StoredItem.Name}");
                             }
-
-                            System.Diagnostics.Debug.WriteLine($"Adding item to CategoryItems: {item.StoredItem.Name}, Quantity: {item.Quantity}, Unit: {item.StoredItem.Unit}");
                             CategoryItems.Add(item);
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Skipping item with ID {item.ItemId} because StoredItem is null");
                         }
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"API call failed: {response.Error?.Content}");
                     if (response.Error != null)
                     {
                         var errorContent = response.Error.Content;
-                        System.Diagnostics.Debug.WriteLine($"Error content: {errorContent}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading category items: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült betölteni a kategória elemeit", "OK");
             }
             finally
@@ -271,41 +223,29 @@ namespace Dikamon.ViewModels
             try
             {
                 IsLoading = true;
-                System.Diagnostics.Debug.WriteLine($"Loading available items for category {CategoryId}");
-
-                // Get all items for this category
                 var response = await _itemsApiCommand.GetItemsByTypeId(CategoryId);
-
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     AvailableItems.Clear();
-                    System.Diagnostics.Debug.WriteLine($"Received {response.Content.Count} available items");
                     foreach (var item in response.Content)
                     {
-                        // Ensure Unit is set to a non-null value
                         if (string.IsNullOrEmpty(item.Unit))
                         {
                             item.Unit = "db";
-                            System.Diagnostics.Debug.WriteLine($"Set default unit 'db' for available item {item.Name}");
                         }
-
                         AvailableItems.Add(item);
-                        System.Diagnostics.Debug.WriteLine($"Added available item: {item.Name} with unit: {item.Unit}");
                     }
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"API call failed: {response.Error?.Content}");
                     if (response.Error != null)
                     {
                         var errorContent = response.Error.Content;
-                        System.Diagnostics.Debug.WriteLine($"Error content: {errorContent}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error loading available items: {ex.Message}");
             }
             finally
             {
@@ -327,11 +267,10 @@ namespace Dikamon.ViewModels
         [RelayCommand]
         private async Task Search()
         {
-            System.Diagnostics.Debug.WriteLine($"Search initiated with text: '{SearchText}'");
 
             if (string.IsNullOrWhiteSpace(SearchText))
             {
-                // If search text is empty, just reload all items
+
                 await LoadCategoryItemsAsync();
                 return;
             }
@@ -342,34 +281,23 @@ namespace Dikamon.ViewModels
 
                 if (_userId == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("Cannot search items: User ID is 0");
                     await Application.Current.MainPage.DisplayAlert("Hiba", "Felhasználói azonosító nem található", "OK");
                     return;
                 }
 
-                // First, try to load all items for this category if we don't have them yet
                 if (CategoryItems.Count == 0)
                 {
                     await LoadCategoryItemsAsync();
                 }
-
-                // Try category-specific API search first
-                System.Diagnostics.Debug.WriteLine($"Calling typed API search for '{SearchText}' in category {CategoryId} for user {_userId}");
                 var typedResponse = await _storedItemsApiCommand.GetStoredItemsByTypeIdAndSearch(_userId, CategoryId, SearchText);
-
                 var apiSearchResults = new List<Stores>();
-
-                // Process typed search results
                 if (typedResponse.IsSuccessStatusCode && typedResponse.Content != null && typedResponse.Content.Count > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Typed API search returned {typedResponse.Content.Count} results");
-
                     foreach (var item in typedResponse.Content)
                     {
                         PopulateStoredItem(item);
                         if (item.StoredItem != null)
                         {
-                            // Ensure Unit is set to a non-null value
                             if (string.IsNullOrEmpty(item.StoredItem.Unit))
                             {
                                 item.StoredItem.Unit = "db";
@@ -378,36 +306,24 @@ namespace Dikamon.ViewModels
                         }
                     }
                 }
-                // If typed search returned no results, try general search
-                else if (typedResponse.IsSuccessStatusCode) // API call succeeded but returned no items
+                else if (typedResponse.IsSuccessStatusCode) 
                 {
-                    System.Diagnostics.Debug.WriteLine($"Typed API search returned no results, trying general search");
-
-                    // Try the general search API
                     var generalResponse = await _storedItemsApiCommand.GetStoredItemsBySearch(_userId, SearchText);
 
                     if (generalResponse.IsSuccessStatusCode && generalResponse.Content != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"General API search returned {generalResponse.Content.Count} results, filtering for current category");
-
-                        // Filter the general results to only include items from our category
                         foreach (var item in generalResponse.Content)
                         {
                             PopulateStoredItem(item);
-
-                            // Check if the item belongs to our category
                             if (item.StoredItem != null)
                             {
-                                // Ensure Unit is set to a non-null value
                                 if (string.IsNullOrEmpty(item.StoredItem.Unit))
                                 {
                                     item.StoredItem.Unit = "db";
                                 }
 
-                                // First, check if we can determine the category from the stored item
                                 bool isInCategory = item.StoredItem.TypeId == CategoryId;
 
-                                // If we can't determine from the stored item, check available items
                                 if (!isInCategory)
                                 {
                                     var availableItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
@@ -417,27 +333,15 @@ namespace Dikamon.ViewModels
                                 if (isInCategory)
                                 {
                                     apiSearchResults.Add(item);
-                                    System.Diagnostics.Debug.WriteLine($"Added item from general search: {item.StoredItem.Name}");
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine($"General API search failed: {generalResponse.Error?.Content}");
-                    }
                 }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"Typed API search failed: {typedResponse.Error?.Content}");
-                }
-
-                // Helper method to populate StoredItem if null
                 void PopulateStoredItem(Stores item)
                 {
                     if (item.StoredItem == null && item.ItemId > 0)
                     {
-                        System.Diagnostics.Debug.WriteLine($"StoredItem is null for item ID {item.ItemId}, trying to find it in available items");
                         var matchingItem = AvailableItems.FirstOrDefault(i => i.Id == item.ItemId);
                         if (matchingItem != null)
                         {
@@ -446,8 +350,6 @@ namespace Dikamon.ViewModels
                     }
                 }
 
-                // If API search found items, use those results
-                // Otherwise, filter locally to handle partial matches the API might have missed
                 List<Stores> searchResults;
 
                 if (apiSearchResults.Count > 0)
@@ -456,36 +358,26 @@ namespace Dikamon.ViewModels
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("API searches returned no results, filtering locally");
-                    // Perform a local search on the already loaded items
                     searchResults = CategoryItems
                         .Where(item =>
                             item.StoredItem != null &&
                             (item.StoredItem.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                              (item.StoredItem.Name_EN != null && item.StoredItem.Name_EN.Contains(SearchText, StringComparison.OrdinalIgnoreCase))))
                         .ToList();
-
-                    System.Diagnostics.Debug.WriteLine($"Local search found {searchResults.Count} results");
                 }
-
-                // Clear and repopulate the collection
                 CategoryItems.Clear();
-
                 foreach (var item in searchResults)
                 {
                     CategoryItems.Add(item);
-                    System.Diagnostics.Debug.WriteLine($"Added search result: {item.StoredItem?.Name}");
                 }
 
                 if (CategoryItems.Count == 0)
                 {
-                    System.Diagnostics.Debug.WriteLine("No items found matching the search criteria");
                     await Application.Current.MainPage.DisplayAlert("Információ", $"Nincs találat a keresésre: '{SearchText}'", "OK");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error searching items: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hiba", "A keresés nem sikerült", "OK");
             }
             finally
@@ -493,8 +385,6 @@ namespace Dikamon.ViewModels
                 IsLoading = false;
             }
         }
-
-        // Modified AddItem method to navigate to the new item page
         [RelayCommand]
         private async Task AddItem()
         {
@@ -506,22 +396,12 @@ namespace Dikamon.ViewModels
 
             try
             {
-                // Add debug information
-                System.Diagnostics.Debug.WriteLine($"[TRACE] Navigating to NewItemPage with categoryId: {CategoryId}, categoryName: {CategoryName}");
-
-                // Double-check that CategoryId is valid
                 if (CategoryId <= 0)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[ERROR] Invalid CategoryId: {CategoryId}");
                     await Application.Current.MainPage.DisplayAlert("Hiba", "Érvénytelen kategória azonosító", "OK");
                     return;
                 }
-
-                // Ensure the categoryId is passed as a string
                 string categoryIdStr = CategoryId.ToString();
-                System.Diagnostics.Debug.WriteLine($"[TRACE] Converted CategoryId to string: {categoryIdStr}");
-
-                // Navigate to the NewItemPage with the category information
                 var navigationParameter = new Dictionary<string, object>
                 {
                     { "categoryId", categoryIdStr },
@@ -532,7 +412,6 @@ namespace Dikamon.ViewModels
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"[ERROR] Error navigating to NewItemPage: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült megnyitni az új termék oldalt", "OK");
             }
         }
@@ -550,15 +429,13 @@ namespace Dikamon.ViewModels
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    System.Diagnostics.Debug.WriteLine($"API error when incrementing: {response.Error?.Content}");
-                    item.Quantity -= 1; // Revert the change on API error
+                    item.Quantity -= 1;
                     await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült növelni a mennyiséget", "OK");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error incrementing item: {ex.Message}");
-                item.Quantity -= 1; // Revert the change
+                item.Quantity -= 1;
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült növelni a mennyiséget", "OK");
             }
         }
@@ -573,7 +450,6 @@ namespace Dikamon.ViewModels
             {
                 if (item.Quantity == 1)
                 {
-                    // Ask for confirmation before removing
                     bool remove = await Application.Current.MainPage.DisplayAlert(
                         "Megerősítés",
                         $"Biztosan eltávolítod a {item.StoredItem?.Name} terméket a konyhádból?",
@@ -588,7 +464,6 @@ namespace Dikamon.ViewModels
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"API error when deleting: {response.Error?.Content}");
                             await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült törölni a terméket", "OK");
                         }
                     }
@@ -597,19 +472,16 @@ namespace Dikamon.ViewModels
                 {
                     item.Quantity -= 1;
                     var response = await _storedItemsApiCommand.AddStoredItem(item);
-
                     if (!response.IsSuccessStatusCode)
                     {
-                        System.Diagnostics.Debug.WriteLine($"API error when decrementing: {response.Error?.Content}");
-                        item.Quantity += 1; // Revert the change on API error
+                        item.Quantity += 1; 
                         await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült csökkenteni a mennyiséget", "OK");
                     }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error decrementing item: {ex.Message}");
-                if (item.Quantity > 0) item.Quantity += 1; // Revert the change if we decremented
+                if (item.Quantity > 0) item.Quantity += 1; 
                 await Application.Current.MainPage.DisplayAlert("Hiba", "Nem sikerült csökkenteni a mennyiséget", "OK");
             }
         }

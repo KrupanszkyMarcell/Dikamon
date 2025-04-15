@@ -12,7 +12,6 @@ using Dikamon.Models;
 
 namespace Dikamon.ViewModels
 {
-    // Helper class for ingredients with comparison between required and available
     public partial class IngredientViewModel : ObservableObject
     {
         [ObservableProperty]
@@ -28,7 +27,6 @@ namespace Dikamon.ViewModels
         private bool _hasEnough;
     }
 
-    // Helper class for instruction steps
     public partial class InstructionStepViewModel : ObservableObject
     {
         [ObservableProperty]
@@ -84,8 +82,6 @@ namespace Dikamon.ViewModels
 
             Ingredients = new ObservableCollection<IngredientViewModel>();
             InstructionSteps = new ObservableCollection<InstructionStepViewModel>();
-
-            // Start loading the user ID right away
             Task.Run(async () => await EnsureUserIdLoadedAsync());
         }
 
@@ -93,8 +89,6 @@ namespace Dikamon.ViewModels
         {
             if (value > 0)
             {
-                Debug.WriteLine($"Recipe ID changed to {value}, will load recipe details");
-                // Use a fire-and-forget Task to handle async initialization
                 Task.Run(async () => await InitializeAsync(value));
             }
         }
@@ -105,21 +99,18 @@ namespace Dikamon.ViewModels
             {
                 await _initializationLock.WaitAsync();
 
-                // First ensure user ID is loaded
                 if (!await EnsureUserIdLoadedAsync())
                 {
-                    Debug.WriteLine("Failed to load user ID during initialization");
+
                     HasError = true;
                     ErrorMessage = "Nem sikerült betölteni a felhasználói adatokat. Kérjük, jelentkezzen be újra.";
                     return;
                 }
 
-                // Now load recipe details
                 await LoadRecipeDetailsAsync(recipeId);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error during initialization: {ex.Message}");
                 HasError = true;
                 ErrorMessage = "Hiba történt az adatok betöltése közben.";
             }
@@ -131,7 +122,6 @@ namespace Dikamon.ViewModels
 
         private async Task<bool> EnsureUserIdLoadedAsync()
         {
-            // If user ID is already loaded, return immediately
             if (_isUserIdLoaded && _userId > 0)
             {
                 return true;
@@ -139,9 +129,7 @@ namespace Dikamon.ViewModels
 
             try
             {
-                // Try to get from user object first
                 var userJson = await SecureStorage.GetAsync("user");
-                Debug.WriteLine($"Looking for user ID, found userJson: {!string.IsNullOrEmpty(userJson)}");
 
                 if (!string.IsNullOrEmpty(userJson))
                 {
@@ -150,33 +138,27 @@ namespace Dikamon.ViewModels
                     {
                         _userId = user.Id.Value;
                         _isUserIdLoaded = true;
-                        Debug.WriteLine($"User ID loaded from user object: {_userId}");
+
                         return true;
                     }
-                    else
-                    {
-                        Debug.WriteLine("User object or User.Id is null after deserialization");
-                    }
+
                 }
 
-                // Fallback: Try to get user ID directly
+
                 var userIdStr = await SecureStorage.GetAsync("userId");
-                Debug.WriteLine($"Looking for userId key, found: {!string.IsNullOrEmpty(userIdStr)}");
 
                 if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
                 {
                     _userId = userId;
                     _isUserIdLoaded = true;
-                    Debug.WriteLine($"User ID loaded from userId key: {_userId}");
+
                     return true;
                 }
 
-                Debug.WriteLine("Failed to load user ID from any source");
                 return false;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading user ID: {ex.Message}");
                 return false;
             }
         }
@@ -187,7 +169,6 @@ namespace Dikamon.ViewModels
             {
                 if (_userId <= 0)
                 {
-                    Debug.WriteLine("Cannot load recipe details: User ID is not available");
                     HasError = true;
                     ErrorMessage = "A felhasználói adatok nem elérhetők. Kérjük, jelentkezzen be újra.";
                     return;
@@ -195,32 +176,19 @@ namespace Dikamon.ViewModels
 
                 IsLoading = true;
                 HasError = false;
-                Debug.WriteLine($"Loading recipe details for ID: {recipeId}, User ID: {_userId}");
-
-                // Use the corrected API method to get recipe by ID
                 var response = await _recipesApiCommand.GetRecipeById(recipeId);
 
                 if (response.IsSuccessStatusCode && response.Content != null)
                 {
                     Recipe = response.Content;
-                    Debug.WriteLine($"Recipe loaded successfully: {Recipe.Name}");
-
-                    // Load ingredients
                     await LoadIngredientsAsync(recipeId);
-
-                    // Create instruction steps from description
                     CreateInstructionSteps();
-
-                    // Check if we can make the recipe
                     UpdateCanMakeRecipe();
                 }
                 else
                 {
-                    Debug.WriteLine($"Failed to load recipe details: {response.Error?.Content}");
                     HasError = true;
                     ErrorMessage = "Nem sikerült betölteni a recept részleteit.";
-
-                    // Log additional details about the error
                     if (response.Error != null)
                     {
                         Debug.WriteLine($"Error message: {response.Error.Message}");
@@ -231,8 +199,6 @@ namespace Dikamon.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading recipe details: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 HasError = true;
                 ErrorMessage = $"Hiba történt a recept betöltése közben: {ex.Message}";
             }

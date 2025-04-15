@@ -20,18 +20,9 @@ public partial class NewItemPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        System.Diagnostics.Debug.WriteLine($"[TRACE] NewItemPage.OnAppearing - CategoryId: {CategoryId}, CategoryName: {CategoryName}");
-
-        // Explicitly initialize the ViewModel with the CategoryId
         if (!string.IsNullOrEmpty(CategoryId))
         {
-            System.Diagnostics.Debug.WriteLine($"[TRACE] Calling InitializeWithCategoryInfo with CategoryId: {CategoryId}");
             _viewModel.InitializeWithCategoryInfo(CategoryId);
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine("[ERROR] CategoryId is null or empty in NewItemPage.OnAppearing");
         }
     }
 }

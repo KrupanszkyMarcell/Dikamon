@@ -18,15 +18,11 @@
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
           Padding="20">
-
-        <!-- Header with brown background -->
         <Grid Grid.Row="0" 
               BackgroundColor="#AD9163"
               RowDefinitions="Auto,Auto,Auto"
               Margin="-20,-20,-20,20"
               Padding="20,20,20,20">
-
-            <!-- Title -->
             <Label Grid.Row="0"
                    Text="Receptek" 
                    FontFamily="Tiny5" 
@@ -34,8 +30,6 @@
                    HorizontalOptions="Center"
                    HorizontalTextAlignment="Center"
                    TextColor="White"/>
-
-            <!-- Subtitle -->
             <Label Grid.Row="1"
                    Text="Egyszerű receptek neked" 
                    FontFamily="Tiny5" 
@@ -44,13 +38,9 @@
                    HorizontalTextAlignment="Center"
                    TextColor="White"
                    Margin="0,5,0,20"/>
-
-            <!-- Filter and Search -->
             <Grid Grid.Row="2" 
                   ColumnDefinitions="*,*"
                   ColumnSpacing="15">
-
-                <!-- Recipe Type Filter -->
                 <Frame Grid.Column="0"
                        BackgroundColor="White" 
                        CornerRadius="10" 
@@ -73,8 +63,6 @@
                                 SelectedIndexChanged="RecipeType_Changed" />
                     </Grid>
                 </Frame>
-
-                <!-- Search Bar -->
                 <Frame Grid.Column="1"
                        BackgroundColor="White" 
                        CornerRadius="10" 
@@ -100,12 +88,8 @@
                 </Frame>
             </Grid>
         </Grid>
-
-        <!-- Main content with recipes -->
         <Grid Grid.Row="1" 
               RowDefinitions="*,Auto">
-
-            <!-- Recipe Items visible when not loading -->
             <RefreshView Grid.Row="0"
                         IsRefreshing="{Binding IsRefreshing}" 
                         Command="{Binding RefreshCommand}"
@@ -120,12 +104,9 @@
                                   BackgroundColor="White"
                                   HasShadow="True">
                                 <Grid>
-                                    <!-- Recipe Image -->
                                     <Image Source="{Binding Image, Converter={StaticResource ImageSourceConverter}}"
                                           Aspect="AspectFill"
                                           HeightRequest="200" />
-
-                                    <!-- Recipe Information -->
                                     <StackLayout VerticalOptions="End">
                                         <Grid BackgroundColor="#FFFFFF" 
                                               Padding="10">
@@ -133,20 +114,14 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-
-                                            <!-- Recipe Name -->
                                             <Label Grid.Row="0"
                                                   Text="{Binding Name}"
                                                   FontFamily="Tiny5"
                                                   FontSize="20"
                                                   TextColor="Black"
                                                   Margin="0,0,0,5" />
-
-                                            <!-- Recipe Metadata -->
                                             <Grid Grid.Row="1"
                                                   ColumnDefinitions="Auto,*,Auto">
-
-                                                <!-- Preparation Time -->
                                                 <StackLayout Grid.Column="0"
                                                             Orientation="Horizontal"
                                                             Spacing="5">
@@ -155,7 +130,6 @@
                                                           VerticalOptions="Center" />
                                                 </StackLayout>
 
-                                                <!-- Recipe Badges (Type) -->
                                                 <StackLayout Grid.Column="2"
                                                             Orientation="Horizontal"
                                                             Spacing="5"
@@ -194,21 +168,15 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
             </RefreshView>
-
-            <!-- Loading indicator - on top when visible -->
             <ActivityIndicator IsRunning="{Binding IsLoading}"
                               IsVisible="{Binding IsLoading}"
                               HorizontalOptions="Center"
                               VerticalOptions="Center"
                               Color="#FFEE58"
                               Scale="2"/>
-
-            <!-- Pagination controls -->
             <Grid Grid.Row="1" 
                   ColumnDefinitions="Auto,*,Auto"
                   Margin="0,10,0,0">
-
-                <!-- Previous Page Button -->
                 <Button Grid.Column="0"
                         Text="&lt;"
                         BackgroundColor="#26283b"
@@ -219,8 +187,6 @@
                         Padding="0"
                         Command="{Binding PreviousPageCommand}"
                         IsEnabled="{Binding CurrentPage, Converter={StaticResource GreaterThanOneConverter}}"/>
-
-                <!-- Page Indicator -->
                 <Label Grid.Column="1"
                        Text="{Binding CurrentPage, StringFormat='{0}'}"
                        HorizontalOptions="Center"
@@ -228,8 +194,6 @@
                        FontFamily="Tiny5"
                        FontSize="18"
                        TextColor="White"/>
-
-                <!-- Next Page Button -->
                 <Button Grid.Column="2"
                         Text="&gt;"
                         BackgroundColor="#26283b"

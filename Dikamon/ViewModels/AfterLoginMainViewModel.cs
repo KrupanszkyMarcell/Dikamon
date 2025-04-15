@@ -18,7 +18,6 @@ namespace Dikamon.ViewModels
         {
             _tokenService = tokenService;
 
-            // Try to get the user name from secure storage
             LoadUserName();
         }
 
@@ -38,8 +37,6 @@ namespace Dikamon.ViewModels
             }
             catch (Exception ex)
             {
-                // Handle exception or use default name
-                System.Diagnostics.Debug.WriteLine($"Error loading user name: {ex.Message}");
             }
         }
 
@@ -52,7 +49,7 @@ namespace Dikamon.ViewModels
         [RelayCommand]
         async Task GoToRecipes()
         {
-            // Navigate to recipes page (to be implemented)
+
             await Shell.Current.GoToAsync(nameof(RecipesPage), true);
         }
 
@@ -64,14 +61,14 @@ namespace Dikamon.ViewModels
 
             if (answer)
             {
-                // Clear all stored credentials
+
                 if (_tokenService != null)
                 {
                     await _tokenService.ClearAllCredentials();
                 }
                 else
                 {
-                    // Fallback if token service isn't available
+
                     SecureStorage.Remove("token");
                     SecureStorage.Remove("user");
                     SecureStorage.Remove("userEmail");
@@ -79,7 +76,7 @@ namespace Dikamon.ViewModels
                     SecureStorage.Remove("userId");
                 }
 
-                // Navigate back to the main page
+
                 await Shell.Current.GoToAsync("//MainPage", true);
             }
         }

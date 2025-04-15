@@ -9,8 +9,6 @@
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
           Padding="20">
-
-        <!-- Header -->
         <StackLayout Grid.Row="0" 
                     Orientation="Horizontal" 
                     HorizontalOptions="Start"
@@ -24,13 +22,9 @@
                   FontSize="24"
                   VerticalOptions="Center" />
         </StackLayout>
-
-        <!-- Main Form -->
         <ScrollView Grid.Row="1">
             <Grid RowDefinitions="Auto,Auto,*,Auto"
                   Margin="0,0,0,20">
-
-                <!-- Activity Indicator for loading state -->
                 <ActivityIndicator IsRunning="{Binding IsLoading}" 
                                   IsVisible="{Binding IsLoading}"
                                   HorizontalOptions="Center"
@@ -38,8 +32,6 @@
                                   Grid.RowSpan="3"
                                   Color="#FFEE58"
                                   Scale="2"/>
-
-                <!-- Title -->
                 <StackLayout Grid.Row="0" Spacing="5" Margin="0,0,0,20">
                     <Label Text="Vegeyél fel egy új DiKAMON-t a konyhádba!" 
                           FontFamily="Tiny5" 
@@ -53,15 +45,12 @@
                           HorizontalOptions="Center"
                           TextColor="#FFEE58"/>
                 </StackLayout>
-
-                <!-- Form Content -->
                 <Frame Grid.Row="1"
                        BackgroundColor="White"
                        CornerRadius="15"
                        Padding="20"
                        Margin="0,0,0,20">
                     <StackLayout Spacing="15">
-                        <!-- Item Selection -->
                         <StackLayout>
                             <Label Text="Élelmiszerek"
                                    FontFamily="Tiny5"
@@ -78,8 +67,6 @@
                                         FontFamily="OpenSansRegular" />
                             </Frame>
                         </StackLayout>
-
-                        <!-- Quantity -->
                         <StackLayout>
                             <Label Text="Mennyiség"
                                    FontFamily="Tiny5"
@@ -129,8 +116,6 @@
                         </StackLayout>
                     </StackLayout>
                 </Frame>
-
-                <!-- Item image - displayed when an item is selected -->
                 <StackLayout Grid.Row="2" 
                             HorizontalOptions="Center"
                             VerticalOptions="Start"
@@ -153,8 +138,6 @@
                           HorizontalOptions="Center"  
                           Margin="0,5,0,0"/>
                 </StackLayout>
-
-                <!-- Action Buttons -->
                 <Grid Grid.Row="3" 
                      ColumnDefinitions="*,*"
                      ColumnSpacing="15"

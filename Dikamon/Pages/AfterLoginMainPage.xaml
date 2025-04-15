@@ -6,40 +6,27 @@
 
     <Grid RowDefinitions="Auto,*" 
           Padding="20">
-
-        <!-- Welcome Header with Personalized Greeting -->
-
         <Grid Grid.Row="0" 
       RowDefinitions="Auto"
       BackgroundColor="#8080CEF5"
       Margin="-20,-20,-20,20"
       Padding="15,20,15,20">
-
-            <!-- Main Header Content  -->
             <Grid ColumnDefinitions="Auto,*">
-
-                <!-- App Icon/Logo  -->
                 <Image Grid.Column="0"
                Source="fridgebuddy.png" 
                WidthRequest="50" 
                HeightRequest="50"
                Margin="0,0,10,0"
                VerticalOptions="Center"/>
-
-                <!-- Text Container -->
                 <StackLayout Grid.Column="1" 
                      VerticalOptions="Center"
                      HorizontalOptions="FillAndExpand"
                      Spacing="2">
-
-                    <!-- User Greeting  -->
                     <Label Text="{Binding UserName, StringFormat='Szervusz, {0}!'}" 
                   FontFamily="Tiny5" 
                   FontSize="22" 
                   TextColor="#26283b"
                   LineBreakMode="WordWrap"/>
-
-                    <!-- App Description  -->
                     <Label Text="DiKA vagyok, a te Digitális Konyhai Asszisztensed." 
                   FontFamily="Tiny5" 
                   FontSize="14" 
@@ -48,12 +35,8 @@
                 </StackLayout>
             </Grid>
         </Grid>
-
-        <!-- Main Content -->
         <ScrollView Grid.Row="1">
             <StackLayout Spacing="20">
-
-                <!-- Kitchen Management Section -->
                 <Frame BackgroundColor="White" 
                        CornerRadius="10" 
                        Padding="15" 
@@ -89,8 +72,6 @@
                                 Command="{Binding GoToMyKitchenCommand}"/>
                     </StackLayout>
                 </Frame>
-
-                <!-- Recipes Section -->
                 <Frame BackgroundColor="White" 
                        CornerRadius="10" 
                        Padding="15" 
@@ -130,8 +111,6 @@
                                 Command="{Binding GoToRecipesCommand}"/>
                     </StackLayout>
                 </Frame>
-
-                <!-- Logout Button -->
                 <Button Text="Kijelentkezés" 
                         BackgroundColor="#FF5252" 
                         TextColor="White" 

@@ -17,7 +17,6 @@ namespace Dikamon.Pages
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            Debug.WriteLine("MainPage appeared");
         }
     }
 }

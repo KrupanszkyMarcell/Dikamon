@@ -17,8 +17,6 @@
     <Grid RowDefinitions="Auto,*"
           BackgroundColor="{StaticResource MainColor}"
           Padding="0">
-
-        <!-- Back button and header -->
         <Grid Grid.Row="0" 
               BackgroundColor="Transparent"
               Margin="10,10,10,0">
@@ -29,8 +27,6 @@
                     HorizontalOptions="Start"
                     Command="{Binding GoBackCommand}"/>
         </Grid>
-
-        <!-- Loading Indicator -->
         <ActivityIndicator Grid.Row="1" 
                          IsRunning="{Binding IsLoading}"
                          IsVisible="{Binding IsLoading}"
@@ -38,8 +34,6 @@
                          VerticalOptions="Center"
                          Color="#AD9163"
                          Scale="2" />
-
-        <!-- Error State -->
         <StackLayout Grid.Row="1" 
                    IsVisible="{Binding HasError}"
                    VerticalOptions="Center"
@@ -63,19 +57,13 @@
                   HorizontalOptions="Center"
                   WidthRequest="200"/>
         </StackLayout>
-
-        <!-- Content when loaded successfully -->
         <ScrollView Grid.Row="1" IsVisible="{Binding HasError, Converter={StaticResource InvertedBoolConverter}}">
             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                   IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
-
-                <!-- Recipe Image -->
                 <Image Grid.Row="0" 
                        Source="{Binding Recipe.Image, Converter={StaticResource ImageSourceConverter}}"
                        Aspect="AspectFill"
                        HeightRequest="200" />
-
-                <!-- Recipe Title and Type -->
                 <Grid Grid.Row="1" 
                       BackgroundColor="#AD9163" 
                       Padding="20,15">
@@ -100,8 +88,6 @@
                         </StackLayout>
                     </StackLayout>
                 </Grid>
-
-                <!-- Ingredients section -->
                 <Grid Grid.Row="2"
                       Padding="20"
                       RowDefinitions="Auto,*">
@@ -125,7 +111,6 @@
                                        StrokeThickness="1"
                                        Padding="15,10">
                                     <Grid ColumnDefinitions="*,Auto,Auto">
-                                        <!-- Ingredient name and image -->
                                         <StackLayout Grid.Column="0"
                                                    Orientation="Horizontal"
                                                    Spacing="10">
@@ -140,8 +125,6 @@
                                                   FontSize="16"
                                                   VerticalOptions="Center" />
                                         </StackLayout>
-
-                                        <!-- Required quantity -->
                                         <StackLayout Grid.Column="1" 
                                                    Orientation="Horizontal"
                                                    VerticalOptions="Center">
@@ -161,8 +144,6 @@
                                                   FontSize="16"
                                                   FontFamily="OpenSansRegular" />
                                         </StackLayout>
-
-                                        <!-- Available quantity (in red or green) -->
                                         <StackLayout Grid.Column="2" 
                                                    Orientation="Horizontal"
                                                    VerticalOptions="Center"
@@ -198,8 +179,6 @@
                         </CollectionView.EmptyView>
                     </CollectionView>
                 </Grid>
-
-                <!-- Description section -->
                 <StackLayout Grid.Row="3"
                              Padding="20">
                     <Label Text="Elkészítés" 
@@ -212,8 +191,6 @@
                            FontSize="16"
                            Margin="0,0,0,15"/>
                 </StackLayout>
-
-                <!-- Instructions section -->
                 <Grid Grid.Row="4"
                        Padding="20">
                     <StackLayout>
@@ -236,7 +213,6 @@
                                            Padding="0">
                                         <Grid ColumnDefinitions="Auto,*"
                                              RowDefinitions="Auto">
-                                            <!-- Step number -->
                                             <Frame Grid.Column="0"
                                                  BackgroundColor="#AD9163"
                                                  WidthRequest="40"
@@ -251,8 +227,6 @@
                                                      VerticalOptions="Center"
                                                      HorizontalOptions="Center"/>
                                             </Frame>
-
-                                            <!-- Step description -->
                                             <Label Grid.Column="1"
                                                  Text="{Binding Description}"
                                                  FontFamily="OpenSansRegular"
@@ -265,13 +239,9 @@
                         </CollectionView>
                     </StackLayout>
                 </Grid>
-
-                <!-- Action button -->
                 <Grid Grid.Row="5"
                       Padding="20,20,20,40"
                       RowDefinitions="Auto,Auto">
-
-                    <!-- Make Recipe button -->
                     <Frame Grid.Row="0"
                            BackgroundColor="{Binding CanMakeRecipe, Converter={StaticResource BoolToColorConverter}}"
                            CornerRadius="10"
@@ -286,8 +256,6 @@
                                 Command="{Binding MakeRecipeCommand}"
                                 IsEnabled="{Binding CanMakeRecipe}" />
                     </Frame>
-
-                    <!-- Warning if can't make recipe -->
                     <StackLayout Grid.Row="1"
                                 Margin="0,10,0,0"
                                 IsVisible="{Binding CanMakeRecipe, Converter={StaticResource InvertedBoolConverter}}">

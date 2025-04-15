@@ -9,9 +9,9 @@ namespace Dikamon.Services
         {
             if (value is bool boolValue)
             {
-                return boolValue ? "#4CAF50" : "#F44336"; // Green if true (has enough), Red if false (not enough)
+                return boolValue ? "#4CAF50" : "#F44336";
             }
-            return "#F44336"; // Default to red (not enough)
+            return "#F44336"; 
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

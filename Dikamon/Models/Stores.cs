@@ -51,8 +51,6 @@ namespace Dikamon.Models
                 }
             }
         }
-
-        // INotifyPropertyChanged implementation
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
