@@ -25,6 +25,9 @@ namespace Dikamon.ViewModels
         [ObservableProperty]
         public Users user = new Users();
 
+        [ObservableProperty]
+        private bool _isLoading;
+
         public LoginViewModel(IUserApiCommand userApiCommand)
         {
             _userApiCommand = userApiCommand;
@@ -35,6 +38,7 @@ namespace Dikamon.ViewModels
         {
             try
             {
+                IsLoading = true; // Show loading indicator
                 System.Diagnostics.Debug.WriteLine($"Login attempt for user: {User.Email}");
 
                 var response = await _userApiCommand.LoginUser(User);
@@ -76,6 +80,10 @@ namespace Dikamon.ViewModels
             {
                 System.Diagnostics.Debug.WriteLine($"Login error: {ex.Message}");
                 await Application.Current.MainPage.DisplayAlert("Login", "Login failed", "OK");
+            }
+            finally
+            {
+                IsLoading = false; // Hide loading indicator
             }
         }
 

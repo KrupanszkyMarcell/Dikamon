@@ -2,7 +2,13 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Dikamon.Pages.RegisterPage"
+             xmlns:services="clr-namespace:Dikamon.Services"
              Title="RegisterPage">
+
+    <ContentPage.Resources>
+        <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    </ContentPage.Resources>
+
     <Grid RowDefinitions="Auto,*,Auto"
           Padding="20">
 
@@ -21,8 +27,17 @@
                    VerticalOptions="Center" />
         </StackLayout>
 
-        <!-- Main content area -->
-        <ScrollView Grid.Row="1">
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1" 
+                         IsRunning="{Binding IsLoading}"
+                         IsVisible="{Binding IsLoading}"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Color="#AD9163"
+                         Scale="2" />
+
+        <!-- Main content area - visible when not loading -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
             <Grid RowDefinitions="Auto,*,Auto"
                   Margin="0,10">
 
@@ -101,14 +116,14 @@
                                     <Entry Grid.Column="0"
                                            Placeholder="Legalább 8 karakter"
                                            FontFamily="OpenSansRegular"
-                                           IsPassword="True"
-                                           x:Name="PasswordEntry"
+                                           IsPassword="{Binding IsPasswordVisible, Converter={StaticResource InvertedBoolConverter}}"
                                            Text="{Binding User.Password}"/>
                                     <ImageButton Grid.Column="1"
                                                 Source="eye_icon.png"
                                                 WidthRequest="24"
                                                 HeightRequest="24"
                                                 BackgroundColor="Transparent"
+                                                Command="{Binding TogglePasswordVisibilityCommand}"
                                                 />
                                 </Grid>
                             </Frame>
@@ -127,13 +142,14 @@
                                     <Entry Grid.Column="0"
                                            Placeholder="Adja meg újra a jelszavát"
                                            FontFamily="OpenSansRegular"
-                                           IsPassword="True"
-                                           x:Name="ConfirmPasswordEntry"/>
+                                           IsPassword="{Binding IsConfirmPasswordVisible, Converter={StaticResource InvertedBoolConverter}}"
+                                           Text="{Binding ConfirmPassword}"/>
                                     <ImageButton Grid.Column="1"
                                                 Source="eye_icon.png"
                                                 WidthRequest="24"
                                                 HeightRequest="24"
                                                 BackgroundColor="Transparent"
+                                                Command="{Binding ToggleConfirmPasswordVisibilityCommand}"
                                                 />
                                 </Grid>
                             </Frame>
