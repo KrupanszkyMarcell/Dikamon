@@ -2,8 +2,12 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Dikamon.Pages.MainPage"
+             xmlns:services="clr-namespace:Dikamon.Services"
              >
 
+    <ContentPage.Resources>
+        <services:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto"
          Padding="20">
@@ -23,10 +27,20 @@
                   VerticalOptions="Center" />
         </StackLayout>
 
-        <!-- Main content area -->
+        <!-- Loading Indicator (similar to RecipeDetailsPage) -->
+        <ActivityIndicator Grid.Row="1" 
+                         IsRunning="{Binding IsLoading}"
+                         IsVisible="{Binding IsLoading}"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Color="#AD9163"
+                         Scale="2" />
+
+        <!-- Main content area - visible when not loading -->
         <Grid Grid.Row="1" 
              RowDefinitions="*,Auto,Auto"
-             Margin="0,20">
+             Margin="0,20"
+             IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
 
             <!-- Refrigerator character -->
             <Image Grid.Row="0" 
